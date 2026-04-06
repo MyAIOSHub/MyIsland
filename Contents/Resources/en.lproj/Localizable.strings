@@ -1,0 +1,361 @@
+/* ============================================================
+   Localizable.strings (English)
+   My Island — macOS Notch Status Panel
+   ============================================================ */
+
+/* Onboarding */
+"onboarding.tagline" = "A Dynamic Island for your AI coding tools";
+"onboarding.feature.permissions" = "Permissions at a glance";
+"onboarding.feature.jump" = "Click to jump to the right window";
+"onboarding.feature.zeroConfig" = "Zero config, works out of the box";
+"onboarding.start" = "Get Started";
+"onboarding.contextSwitches" = "Context switches";
+"onboarding.agentsRunning" = "You have 4 agents running.";
+"onboarding.oneWaiting" = "One of them has been waiting for you.";
+"onboarding.15hours" = "That's 15 hours a week.";
+"onboarding.next" = "Next";
+"onboarding.hooksHint" = "You can manage individual CLI hooks in Settings.";
+"onboarding.everythingOneGlance" = "Everything. One glance.";
+"onboarding.approveWithout" = "Approve without switching.";
+"onboarding.jumpToTab" = "Jump to the exact tab.";
+"onboarding.yourEnvironment" = "Your Environment";
+"onboarding.agents" = "AI Agents";
+"onboarding.terminals" = "Terminals & IDEs";
+"onboarding.detected" = "detected";
+"onboarding.allConfigured" = "Everything's configured. No action needed.";
+"onboarding.startVibing" = "Start Vibing";
+"onboarding.startTrial" = "Start 5-Day Free Trial";
+"onboarding.getEarlyBird" = "Get Early Bird Price — %@";
+"onboarding.alreadyHaveKey" = "Already have a license key?";
+"onboarding.checkEmail" = "Check your email for the license key";
+"onboarding.pasteKey" = "Paste license key";
+"onboarding.reopenCheckout" = "Re-open checkout";
+"onboarding.startTrialInstead" = "Start trial instead";
+
+/* Permission Approval */
+"approval.operateInTerminal" = "Continue in Terminal";
+"approval.goToTerminal" = "Go to Terminal";
+"approval.deny" = "Deny";
+"approval.allow" = "Allow Once";
+"approval.always" = "Always Allow";
+"approval.allowAll" = "Allow All";
+"approval.bypass" = "Bypass";
+"approval.detailsUnavailable" = "(%@ - details unavailable)";
+"approval.detail.moreLines" = "+%lld lines";
+"approval.detail.newFile" = "new file";
+
+/* Question / AskUserQuestion */
+"question.waiting" = "Claude is waiting for an answer";
+"question.answerInTerminal" = "Please answer in the terminal";
+"question.claudeQuestion" = "Claude's Question";
+"question.count" = "(%lld questions)";
+"question.multiSelect" = "Multi-select";
+"question.confirmSelection" = "Confirm Selection (%lld)";
+"question.submitAll" = "Submit All Answers";
+"question.answerAllWarning" = "Please answer all questions";
+
+/* ExitPlanMode */
+"exitPlan.title" = "Exit Plan Mode";
+"exitPlan.tag" = "Plan";
+"exitPlan.bypass" = "Bypass Permissions";
+"exitPlan.bypassDesc" = "Skip all permission prompts";
+"exitPlan.acceptEdits" = "Auto-accept Edits";
+"exitPlan.acceptEditsDesc" = "Auto-approve file edits only";
+"exitPlan.manualApprove" = "Manually Approve";
+"exitPlan.manualApproveDesc" = "Review each action · Safest";
+"exitPlan.feedbackPlaceholder" = "Tell Claude what to change…";
+"exitPlan.requestedPermissions" = "Requested permissions:";
+
+/* Settings Menu */
+"menu.launchAtLogin" = "Launch at Login";
+"menu.display" = "Display";
+"menu.automatic" = "Automatic";
+"menu.automaticDesc" = "Built-in first, then main";
+"menu.auto" = "Auto";
+"menu.builtIn" = "Built-in";
+"menu.main" = "Main";
+"menu.layout" = "Layout";
+"layout.clean" = "Clean";
+"layout.detailed" = "Detailed";
+"layout.cleanDesc" = "More space for menu bar";
+"layout.detailedDesc" = "Session titles & status at a glance";
+"menu.modifierKey" = "Modifier Key";
+"menu.labs" = "Labs";
+"menu.labs.warpTabJump" = "Warp Tab Jumping";
+"menu.helpImprove" = "Help Improve My Island";
+"menu.exportDiagnostics" = "Export Diagnostic Report";
+"menu.exportDiagnosticsFooter" = "Includes system info and anonymized logs. No personal data.";
+"menu.creator" = "Creator";
+"menu.testSentry" = "Test Sentry";
+"menu.testSentryDetail" = "Send test event";
+"menu.debugLayout" = "Debug Layout";
+"menu.quit" = "Quit My Island";
+"menu.sentryTestTitle" = "Sentry Test";
+"menu.sentryTestMessage" = "Test event sent! Check your Sentry dashboard in a few seconds.";
+"menu.ok" = "OK";
+
+/* Session */
+"session.showAll" = "Show all %lld sessions";
+"session.you" = "You:";
+"session.restartForLive" = "Restart session for live tracking";
+"session.interrupted" = "Interrupted";
+"session.doneTag" = "Done";
+"session.ready" = "Ready";
+"session.mayNeedAttention" = "May need attention";
+"child_agents.running_%d" = "Running %d agent(s)";
+"session.compacting" = "Compacting context...";
+"session.compactComplete" = "Conversation compacted";
+"session.waitingForSession" = "Waiting for session";
+"session.emptyFirstInstall" = "The island awaits";
+"session.emptyFirstInstallHint" = "Start coding to light it up";
+"session.hideFromPanel" = "Hide session from panel";
+
+/* Tasks */
+"tasks.title" = "Tasks";
+"tasks.stats" = "(%lld done, %lld in progress, %lld open)";
+"tasks.hiddenCompleted" = "… +%lld completed";
+
+/* Content (Header) */
+"content.session" = "session";
+"content.sessions" = "sessions";
+"content.sessionCount.one" = "%lld session";
+"content.sessionCount.other" = "%lld sessions";
+
+/* Beta Expiration */
+"beta.expiredTitle" = "Beta Has Expired";
+"beta.expiredMessage" = "This beta expired on %@.\n\nClick \"Check for Updates\" to get the latest version.";
+"beta.checkUpdate" = "Check for Updates";
+"beta.quit" = "Quit";
+
+/* License */
+"menu.license" = "License";
+"payment.trouble.hint" = "Payment issue? Tap to contact support";
+"license.trial" = "Trial";
+"license.trialDays" = "Trial (%lld days left)";
+"license.trialEnded" = "Trial ended";
+"license.issue" = "License Issue";
+"license.expired" = "Expired";
+"license.licensed" = "Licensed";
+"license.activateTitle" = "Activate My Island";
+"license.activateDesc" = "Enter the license key from your purchase confirmation email:";
+"license.activeTitle" = "License Active";
+"license.activeDesc" = "Thank you for supporting My Island!";
+"license.getLicense" = "Get a License...";
+"license.activate" = "Activate";
+"license.unlockFullControl" = "Unlock full control";
+"license.unlockDetail" = "Jump, Approvals, and Shortcuts";
+"license.unlockDetailWithSessions" = "Jump, Approvals, Shortcuts, and +%lld more sessions";
+"license.lockedSessionsSummary" = "+%lld more sessions with a license";
+"license.deactivate" = "Deactivate License";
+"license.buyButton" = "Buy License — $19.99";
+"license.keyPlaceholder" = "Enter license key";
+"license.activating" = "Activating...";
+"license.error.invalidKey" = "Invalid license key";
+"license.error.network" = "Network error, please try again";
+"license.error.wrongProduct" = "This key is for a different product";
+"license.error.activationLimit" = "Activation limit reached. Deactivate another device first.";
+"license.error.disabled" = "This license key has been disabled";
+"license.expiredBanner" = "Trial Expired";
+"license.expiredBannerSub" = "Activate a license to continue";
+
+/* Edition (Easter Egg) — titles stay English across all locales */
+"edition.title.founder" = "FOUNDER";
+"edition.title.pioneer" = "PIONEER";
+"edition.title.explorer" = "EXPLORER";
+"edition.title.voyager" = "VOYAGER";
+"edition.title.islander" = "ISLANDER";
+
+/* Settings - Behaviour */
+"settings.autoCollapseOnLeave" = "Auto-collapse on mouse leave";
+
+/* Settings - Display */
+"settings.display" = "Display";
+"settings.contentFontSize" = "Content Font Size";
+"settings.maxPanelHeight" = "Max Panel Height";
+"settings.completionHeight" = "Completion Card Height";
+"settings.showAgentDetail" = "Show Agent Activity Detail";
+
+/* Pass */
+"pass.copyImage" = "Copy Image";
+"pass.saveImage" = "Save Image";
+
+/* Session Status */
+"status.waitingForInput" = "Waiting for input";
+"status.processing" = "Processing";
+"status.thinking" = "Thinking";
+"status.runningTool" = "Running tool";
+"status.waitingForApproval" = "Needs approval";
+"status.question" = "Waiting for answer";
+"status.compacting" = "Compacting";
+"status.ended" = "Ended";
+"status.notification" = "Notification";
+"status.unknown" = "Unknown";
+
+/* Tool Display */
+"tool.thinkingEllipsis" = "Thinking...";
+"tool.thinkingDetail" = "Thinking: %@";
+"tool.workingEllipsis" = "Working...";
+"tool.allowPrefix" = "Allow %@";
+"tool.runningSkill" = "Running Skill";
+"tool.editing" = "Editing";
+"tool.reading" = "Reading";
+"tool.writing" = "Writing";
+"tool.running" = "Running";
+"tool.searching" = "Searching";
+"tool.finding" = "Finding";
+"tool.tasking" = "Tasking";
+"tool.fetching" = "Fetching";
+
+/* Update */
+"update.checking" = "Checking for updates...";
+"update.install" = "Install";
+"update.installRelaunch" = "Install & Relaunch";
+"update.remindLater" = "Remind Later...";
+"update.downloading" = "Downloading...";
+"update.extracting" = "Preparing update...";
+"update.installing" = "Installing...";
+"update.upToDate" = "You're up to date!";
+"update.upToDateDesc" = "My Island %@ is the latest version.";
+"update.error" = "Update Error";
+
+/* Settings: Sound & Advanced */
+"settings.sound" = "Sound";
+"settings.advanced" = "Advanced";
+
+/* Settings: Shortcuts */
+"settings.globalShortcuts" = "Global Shortcuts";
+"settings.togglePanel" = "Toggle Panel";
+"settings.togglePanelDesc" = "Open from anywhere, ↑↓ navigate, Enter jump";
+"settings.recordShortcut" = "Record Shortcut";
+"settings.panelShortcuts" = "Panel Shortcuts";
+"settings.shortcut.approve" = "Approve";
+"settings.shortcut.deny" = "Deny";
+"settings.shortcut.alwaysAllow" = "Always Allow";
+"settings.shortcut.bypass" = "Bypass Permissions";
+"settings.shortcut.terminal" = "Jump to Terminal";
+"settings.shortcut.selectOption" = "Select Option";
+"settings.shortcut.submitMulti" = "Submit Multi-Select";
+"settings.shortcut.navigate" = "Navigate Sessions";
+"settings.shortcut.collapse" = "Collapse Panel";
+"settings.shortcut.footer" = "Active when the panel is expanded. Hold the modifier key to see shortcut hints on buttons.";
+
+/* Settings: Sidebar */
+"settings.general" = "General";
+"settings.shortcuts" = "Shortcuts";
+"settings.labs" = "Labs";
+"settings.pass" = "Pass";
+"settings.about" = "About";
+
+/* Settings: Section Headers & Items */
+"settings.behaviour" = "Behaviour";
+"settings.version" = "Version";
+"settings.experiments" = "Experiments";
+"settings.noExperiments" = "No experiments available";
+"settings.hideInFullscreen" = "Hide in fullscreen";
+"settings.smartSuppression" = "Smart suppression";
+"settings.smartSuppression.help" = "Don't auto-expand when the agent's terminal tab is in focus";
+
+/* License: Network Error Messages */
+"license.error.timeout" = "Connection timed out — please check your network and retry";
+"license.error.noInternet" = "No internet connection";
+"license.error.server" = "Server error, please try again later";
+"license.error.tls" = "Secure connection failed — try disabling your proxy/VPN, or switch networks";
+"license.verifying" = "Verifying license...";
+"license.startingTrial" = "Starting your trial...";
+"license.connectToStartTrial" = "Connect once to start your trial";
+
+/* Settings: CLI Hooks / IDE Extensions */
+"settings.cliHooks.footer" = "Hooks are configured automatically on launch. Use toggles to control per-CLI auto-configuration.";
+"settings.ideExtensions" = "IDE Extensions";
+"settings.ideExtensions.footer" = "Install extensions to jump directly to the correct terminal tab in your IDE.";
+"settings.antigravity.subtitle" = "Terminal agent only · Native agent coming soon";
+"settings.status.installed" = "Installed";
+"settings.status.cliNotFound" = "CLI not found";
+"settings.status.active" = "Active";
+"settings.status.notInstalled" = "Not installed";
+
+/* Settings: Auto-Hide */
+"settings.autoHideWhenIdle" = "Auto-hide when no active sessions";
+
+/* Settings: Buttons */
+"settings.install" = "Install";
+"settings.uninstall" = "Uninstall";
+"settings.repair" = "Repair";
+"settings.retry" = "Retry";
+"settings.cancel" = "Cancel";
+"settings.add" = "Add";
+
+/* Settings: Custom Claude Code Paths */
+"settings.addClaudeFork" = "Add Claude Code Fork…";
+"settings.customPath.placeholder" = "~/.xxx/engine/cc";
+"settings.customPath.help" = "Enter the config directory of your Claude Code fork (must contain or will create settings.json)";
+"settings.customPath.invalid" = "Directory does not exist";
+"settings.customPath.duplicate" = "This path is already configured";
+"settings.customPath.remove" = "Remove this custom path";
+
+/* Settings: Display Section Headers */
+"settings.display.system" = "System";
+"settings.display.notch" = "Notch";
+"settings.display.panel" = "Panel";
+"settings.picker.default" = "(Default)";
+"settings.priceLocked" = "Your price locked at %@ · Tap to purchase";
+
+/* Settings: Pass */
+"settings.pass.placeholder" = "Activate a license to unlock your pass";
+
+/* Settings: About */
+"settings.website" = "Website";
+"settings.joinCommunity" = "Join Community";
+"settings.reportBug" = "Report Bug";
+"settings.sendFeedback" = "Send Feedback";
+"settings.acknowledgements" = "Acknowledgements";
+"settings.slider.default" = "· Default";
+"settings.slider.reset" = "Reset to default";
+
+/* WeChat QR Sheet */
+"wechat.community.title" = "👾 My Island Community";
+"wechat.scanToJoin" = "Scan with WeChat to join";
+"wechat.close" = "Close";
+
+/* Sound Settings */
+"sound.enable" = "Enable Sound Effects";
+"sound.volume" = "Volume";
+"sound.section.session" = "Session";
+"sound.section.interactions" = "Interactions";
+"sound.section.system" = "System";
+"sound.section.filters" = "Filters";
+"sound.autoDetectProbes" = "Auto-detect probe sessions";
+"sound.autoDetectProbes.help" = "Automatically mutes health-check sessions (e.g. CodexBar ClaudeProbe)";
+"sound.preview" = "Preview";
+
+/* Sound Categories */
+"sound.cat.sessionStart" = "Session Start";
+"sound.cat.taskAcknowledge" = "Task Acknowledge";
+"sound.cat.taskComplete" = "Task Complete";
+"sound.cat.taskError" = "Task Error";
+"sound.cat.inputRequired" = "Approval Needed";
+"sound.cat.resourceLimit" = "Context Limit";
+"sound.cat.userSpam" = "Spam Detection";
+
+/* Sound Category Descriptions */
+"sound.desc.sessionStart" = "New Claude / Codex / Gemini session";
+"sound.desc.taskAcknowledge" = "You submitted a prompt";
+"sound.desc.taskComplete" = "AI finished its turn";
+"sound.desc.taskError" = "Tool failure or API error";
+"sound.desc.inputRequired" = "Permission or question pending";
+"sound.desc.resourceLimit" = "Context window compacting";
+"sound.desc.userSpam" = "3+ prompts in 10 seconds";
+
+/* Hook Watcher */
+"hookWatcher.restored" = "Hooks restored — your CLI hooks were modified by another tool.";
+"hookWatcher.rateLimited" = "Hooks keep being removed. Open Settings → General → CLI Hooks to manage.";
+
+/* Usage */
+"usage.activate" = "Show Usage";
+"usage.activate.tip" = "Tap to view usage";
+"usage.activate.loading" = "Loading usage data...";
+"settings.showUsage" = "Show Usage";
+"settings.showUsageHelp" = "Display API usage data in the notch panel header";
+"settings.usageValueMode" = "Display Value";
+"settings.usageValueMode.used" = "Used";
+"settings.usageValueMode.remaining" = "Remaining";
