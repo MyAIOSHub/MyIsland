@@ -5,22 +5,23 @@ macOS Notch Status Panel - Agent monitoring and notification app.
 ## Project Structure
 
 ```
-Contents/                   # macOS app bundle
-  Info.plist                # App configuration (bundle ID: app.myisland.macos)
-  MacOS/my-island       # Main executable (Universal Binary: x86_64 + arm64)
-  Helpers/my-island-bridge  # Helper executable
-  Frameworks/
-    Sentry.framework        # Error reporting
-    Sparkle.framework       # Auto-update
-  Resources/
-    AppIcon.icns            # App icon
-    Fonts/                  # Custom fonts (DepartureMono)
-    Sounds/                 # Audio assets
-    en.lproj/               # English localization
-    zh-Hans.lproj/          # Simplified Chinese localization
-    ja.lproj/               # Japanese localization
-    ko.lproj/               # Korean localization
-  _CodeSignature/           # Code signing resources
+My Island.app/              # macOS app bundle
+  Contents/
+    Info.plist              # App configuration (bundle ID: app.myisland.macos)
+    MacOS/my-island         # Main executable (Universal Binary: x86_64 + arm64)
+    Helpers/my-island-bridge  # Helper executable
+    Frameworks/
+      Sentry.framework      # Error reporting
+      Sparkle.framework     # Auto-update
+    Resources/
+      AppIcon.icns          # App icon
+      Fonts/                # Custom fonts (DepartureMono)
+      Sounds/               # Audio assets
+      en.lproj/             # English localization
+      zh-Hans.lproj/        # Simplified Chinese localization
+      ja.lproj/             # Japanese localization
+      ko.lproj/             # Korean localization
+    _CodeSignature/         # Code signing resources
 ```
 
 ## Key Info

@@ -1,0 +1,361 @@
+/* ============================================================
+   Localizable.strings (한국어)
+   My Island — macOS Notch 상태 패널
+   ============================================================ */
+
+/* 온보딩 */
+"onboarding.tagline" = "AI 코딩 도구를 위한 다이나믹 아일랜드";
+"onboarding.feature.permissions" = "권한 승인을 한눈에";
+"onboarding.feature.jump" = "클릭하면 올바른 창으로 이동";
+"onboarding.feature.zeroConfig" = "설정 없이 바로 사용";
+"onboarding.start" = "시작하기";
+"onboarding.contextSwitches" = "컨텍스트 전환";
+"onboarding.agentsRunning" = "4개의 에이전트가 실행 중입니다.";
+"onboarding.oneWaiting" = "그 중 하나가 당신을 기다리고 있습니다.";
+"onboarding.15hours" = "일주일에 15시간입니다.";
+"onboarding.next" = "다음";
+"onboarding.hooksHint" = "설정에서 각 CLI의 Hooks를 개별적으로 관리할 수 있습니다.";
+"onboarding.everythingOneGlance" = "모든 것을, 한눈에.";
+"onboarding.approveWithout" = "전환 없이 승인.";
+"onboarding.jumpToTab" = "정확한 탭으로 점프.";
+"onboarding.yourEnvironment" = "당신의 환경";
+"onboarding.agents" = "AI 에이전트";
+"onboarding.terminals" = "터미널 & IDE";
+"onboarding.detected" = "감지됨";
+"onboarding.allConfigured" = "모든 설정 완료. 추가 작업 불필요.";
+"onboarding.startVibing" = "시작하기";
+"onboarding.startTrial" = "5일 무료 체험 시작";
+"onboarding.getEarlyBird" = "얼리버드 가격 — %@";
+"onboarding.alreadyHaveKey" = "라이선스 키가 있으신가요?";
+"onboarding.checkEmail" = "이메일에서 라이선스 키를 확인하세요";
+"onboarding.pasteKey" = "라이선스 키 붙여넣기";
+"onboarding.reopenCheckout" = "구매 페이지 다시 열기";
+"onboarding.startTrialInstead" = "체험판으로 시작";
+
+/* 권한 승인 */
+"approval.operateInTerminal" = "터미널에서 진행해 주세요";
+"approval.goToTerminal" = "터미널로 이동";
+"approval.deny" = "거부";
+"approval.allow" = "한 번 허용";
+"approval.always" = "항상 허용";
+"approval.allowAll" = "모두 허용";
+"approval.bypass" = "건너뛰기";
+"approval.detailsUnavailable" = "(%@ - 세부 정보 없음)";
+"approval.detail.moreLines" = "+%lld 줄";
+"approval.detail.newFile" = "새 파일";
+
+/* 질문 / AskUserQuestion */
+"question.waiting" = "Claude가 답변을 기다리고 있습니다";
+"question.answerInTerminal" = "터미널에서 답변하세요";
+"question.claudeQuestion" = "Claude의 질문";
+"question.count" = "(질문 %lld개)";
+"question.multiSelect" = "다중 선택";
+"question.confirmSelection" = "선택 확인 (%lld)";
+"question.submitAll" = "모든 답변 제출";
+"question.answerAllWarning" = "모든 질문에 답변하세요";
+
+/* 플랜 모드 종료 */
+"exitPlan.title" = "플랜 모드 종료";
+"exitPlan.tag" = "플랜";
+"exitPlan.bypass" = "권한 검사 건너뛰기";
+"exitPlan.bypassDesc" = "모든 권한 프롬프트 건너뛰기";
+"exitPlan.acceptEdits" = "편집 자동 승인";
+"exitPlan.acceptEditsDesc" = "파일 편집만 자동 승인";
+"exitPlan.manualApprove" = "수동 승인";
+"exitPlan.manualApproveDesc" = "각 작업을 검토 · 가장 안전";
+"exitPlan.feedbackPlaceholder" = "Claude에게 변경 사항 전달…";
+"exitPlan.requestedPermissions" = "요청된 권한:";
+
+/* 설정 메뉴 */
+"menu.launchAtLogin" = "로그인 시 시작";
+"menu.display" = "디스플레이";
+"menu.automatic" = "자동";
+"menu.automaticDesc" = "내장 우선, 그다음 메인";
+"menu.auto" = "자동";
+"menu.builtIn" = "내장";
+"menu.main" = "메인";
+"menu.layout" = "레이아웃";
+"layout.clean" = "심플";
+"layout.detailed" = "상세";
+"layout.cleanDesc" = "메뉴 바에 더 많은 공간 확보";
+"layout.detailedDesc" = "세션 제목과 상태를 한눈에";
+"menu.modifierKey" = "보조 키";
+"menu.labs" = "실험실";
+"menu.labs.warpTabJump" = "Warp 탭 점프";
+"menu.helpImprove" = "My Island 개선에 참여";
+"menu.exportDiagnostics" = "진단 보고서 내보내기";
+"menu.exportDiagnosticsFooter" = "시스템 정보와 익명화된 로그를 포함합니다. 개인 데이터는 포함되지 않습니다.";
+"menu.creator" = "개발자";
+"menu.testSentry" = "Sentry 테스트";
+"menu.testSentryDetail" = "테스트 이벤트 전송";
+"menu.debugLayout" = "레이아웃 디버그";
+"menu.quit" = "My Island 종료";
+"menu.sentryTestTitle" = "Sentry 테스트";
+"menu.sentryTestMessage" = "테스트 이벤트가 전송되었습니다! 몇 초 후 Sentry 대시보드를 확인하세요.";
+"menu.ok" = "확인";
+
+/* 세션 */
+"session.showAll" = "모든 %lld 세션 표시";
+"session.you" = "나:";
+"session.restartForLive" = "실시간 추적을 위해 세션 재시작";
+"session.interrupted" = "중단됨";
+"session.doneTag" = "완료";
+"session.ready" = "준비 완료";
+"session.mayNeedAttention" = "확인이 필요할 수 있음";
+"child_agents.running_%d" = "%d 에이전트 실행 중";
+"session.compacting" = "컨텍스트 압축 중...";
+"session.compactComplete" = "대화 압축 완료";
+"session.waitingForSession" = "세션 대기 중";
+"session.emptyFirstInstall" = "섬이 기다리고 있어요";
+"session.emptyFirstInstallHint" = "코딩을 시작하면 불이 켜집니다";
+"session.hideFromPanel" = "패널에서 세션 숨기기";
+
+/* 작업 */
+"tasks.title" = "작업";
+"tasks.stats" = "(%lld 완료, %lld 진행 중, %lld 대기)";
+"tasks.hiddenCompleted" = "… +%lld 완료";
+
+/* 콘텐츠 (헤더) */
+"content.session" = "세션";
+"content.sessions" = "세션";
+"content.sessionCount.one" = "%lld 세션";
+"content.sessionCount.other" = "%lld 세션";
+
+/* 베타 만료 */
+"beta.expiredTitle" = "베타 버전 만료됨";
+"beta.expiredMessage" = "이 베타 버전은 %@에 만료되었습니다.\n\n\"업데이트 확인\"을 클릭하여 최신 버전을 받으세요.";
+"beta.checkUpdate" = "업데이트 확인";
+"beta.quit" = "종료";
+
+/* 라이선스 */
+"menu.license" = "라이선스";
+"payment.trouble.hint" = "결제 문제가 있나요? 탭하여 지원팀에 문의";
+"license.trial" = "체험판";
+"license.trialDays" = "체험판 (남은 %lld일)";
+"license.trialEnded" = "체험판 종료";
+"license.issue" = "라이선스 문제";
+"license.expired" = "만료됨";
+"license.licensed" = "라이선스 활성화됨";
+"license.activateTitle" = "My Island 활성화";
+"license.activateDesc" = "구매 확인 이메일의 라이선스 키를 입력하세요:";
+"license.activeTitle" = "라이선스 활성화됨";
+"license.activeDesc" = "My Island를 구매해 주셔서 감사합니다!";
+"license.getLicense" = "라이선스 구매...";
+"license.activate" = "활성화";
+"license.unlockFullControl" = "전체 제어 잠금 해제";
+"license.unlockDetail" = "점프, 승인, 단축키 잠금 해제";
+"license.unlockDetailWithSessions" = "점프, 승인, 단축키와 +%lld개의 추가 세션 잠금 해제";
+"license.lockedSessionsSummary" = "+%lld개의 추가 세션은 라이선스로 잠금 해제";
+"license.deactivate" = "라이선스 비활성화";
+"license.buyButton" = "라이선스 구매 — $19.99";
+"license.keyPlaceholder" = "라이선스 키 입력";
+"license.activating" = "활성화 중...";
+"license.error.invalidKey" = "잘못된 라이선스 키";
+"license.error.network" = "네트워크 오류, 다시 시도하세요";
+"license.error.wrongProduct" = "이 키는 다른 제품용입니다";
+"license.error.activationLimit" = "활성화 한도에 도달했습니다. 다른 기기에서 먼저 비활성화하세요";
+"license.error.disabled" = "이 라이선스 키는 비활성화되었습니다";
+"license.expiredBanner" = "체험판 만료됨";
+"license.expiredBannerSub" = "계속 사용하려면 라이선스를 활성화하세요";
+
+/* Edition 이스터에그 — 브랜드 명칭은 영어 유지 */
+"edition.title.founder" = "FOUNDER";
+"edition.title.pioneer" = "PIONEER";
+"edition.title.explorer" = "EXPLORER";
+"edition.title.voyager" = "VOYAGER";
+"edition.title.islander" = "ISLANDER";
+
+/* 설정 - 동작 */
+"settings.autoCollapseOnLeave" = "마우스 이탈 시 자동 접기";
+
+/* 설정 - 표시 */
+"settings.display" = "표시";
+"settings.contentFontSize" = "콘텐츠 글꼴 크기";
+"settings.maxPanelHeight" = "최대 패널 높이";
+"settings.completionHeight" = "완료 카드 높이";
+"settings.showAgentDetail" = "에이전트 활동 세부정보 표시";
+
+/* 패스 */
+"pass.copyImage" = "이미지 복사";
+"pass.saveImage" = "이미지 저장";
+
+/* 세션 상태 */
+"status.waitingForInput" = "입력 대기";
+"status.processing" = "처리 중";
+"status.thinking" = "생각 중";
+"status.runningTool" = "도구 실행 중";
+"status.waitingForApproval" = "승인 필요";
+"status.question" = "답변 대기";
+"status.compacting" = "압축 중";
+"status.ended" = "종료됨";
+"status.notification" = "알림";
+"status.unknown" = "알 수 없음";
+
+/* 도구 표시 */
+"tool.thinkingEllipsis" = "생각 중...";
+"tool.thinkingDetail" = "생각 중: %@";
+"tool.workingEllipsis" = "작업 중...";
+"tool.allowPrefix" = "%@ 허용";
+"tool.runningSkill" = "스킬 실행 중";
+"tool.editing" = "편집 중";
+"tool.reading" = "읽기 중";
+"tool.writing" = "쓰기 중";
+"tool.running" = "실행 중";
+"tool.searching" = "검색 중";
+"tool.finding" = "찾기 중";
+"tool.tasking" = "작업 중";
+"tool.fetching" = "가져오기 중";
+
+/* Update */
+"update.checking" = "업데이트 확인 중...";
+"update.install" = "설치";
+"update.installRelaunch" = "설치 후 재실행";
+"update.remindLater" = "나중에 알림...";
+"update.downloading" = "다운로드 중...";
+"update.extracting" = "업데이트 준비 중...";
+"update.installing" = "설치 중...";
+"update.upToDate" = "최신 버전입니다!";
+"update.upToDateDesc" = "My Island %@은 최신 버전입니다.";
+"update.error" = "업데이트 오류";
+
+/* 설정: 사운드 및 고급 */
+"settings.sound" = "사운드";
+"settings.advanced" = "고급";
+
+/* 설정: 단축키 */
+"settings.globalShortcuts" = "글로벌 단축키";
+"settings.togglePanel" = "패널 전환";
+"settings.togglePanelDesc" = "어디서든 열기, ↑↓ 탐색, Enter 점프";
+"settings.recordShortcut" = "단축키 녹화";
+"settings.panelShortcuts" = "패널 단축키";
+"settings.shortcut.approve" = "승인";
+"settings.shortcut.deny" = "거부";
+"settings.shortcut.alwaysAllow" = "항상 허용";
+"settings.shortcut.bypass" = "권한 건너뛰기";
+"settings.shortcut.terminal" = "터미널로 이동";
+"settings.shortcut.selectOption" = "옵션 선택";
+"settings.shortcut.submitMulti" = "다중 선택 제출";
+"settings.shortcut.navigate" = "세션 탐색";
+"settings.shortcut.collapse" = "패널 접기";
+"settings.shortcut.footer" = "패널이 펼쳐져 있을 때 활성화됩니다. 보조 키를 길게 누르면 버튼에 단축키 힌트가 표시됩니다.";
+
+/* 설정: 사이드바 */
+"settings.general" = "일반";
+"settings.shortcuts" = "단축키";
+"settings.labs" = "실험실";
+"settings.pass" = "패스";
+"settings.about" = "정보";
+
+/* 설정: 섹션 제목 및 항목 */
+"settings.behaviour" = "동작";
+"settings.version" = "버전";
+"settings.experiments" = "실험 기능";
+"settings.noExperiments" = "사용 가능한 실험 기능이 없습니다";
+"settings.hideInFullscreen" = "전체 화면에서 숨기기";
+"settings.smartSuppression" = "스마트 억제";
+"settings.smartSuppression.help" = "Agent의 터미널 탭이 포커스 중일 때 패널을 자동 펼치지 않음";
+
+/* 라이선스: 네트워크 오류 메시지 */
+"license.error.timeout" = "연결 시간 초과 — 네트워크를 확인하고 다시 시도하세요";
+"license.error.noInternet" = "인터넷에 연결되어 있지 않습니다";
+"license.error.server" = "서버 오류, 잠시 후 다시 시도하세요";
+"license.error.tls" = "보안 연결 실패 — 프록시/VPN을 비활성화하거나 네트워크를 전환해 보세요";
+"license.verifying" = "라이선스를 확인하는 중...";
+"license.startingTrial" = "체험판을 시작하는 중...";
+"license.connectToStartTrial" = "한 번 온라인에 연결해야 체험판이 시작됩니다";
+
+/* 설정: CLI Hooks / IDE 확장 */
+"settings.cliHooks.footer" = "실행 시 Hooks를 자동 구성합니다. 토글로 CLI별 자동 구성을 제어할 수 있습니다.";
+"settings.ideExtensions" = "IDE 확장";
+"settings.ideExtensions.footer" = "확장을 설치하여 IDE의 올바른 터미널 탭으로 바로 이동합니다.";
+"settings.antigravity.subtitle" = "터미널 에이전트만 · 네이티브 에이전트 곧 지원";
+"settings.status.installed" = "설치됨";
+"settings.status.cliNotFound" = "CLI를 찾을 수 없음";
+"settings.status.active" = "활성";
+"settings.status.notInstalled" = "미설치";
+
+/* 설정: 자동 숨기기 */
+"settings.autoHideWhenIdle" = "활성 세션이 없을 때 자동 숨기기";
+
+/* 설정: 버튼 */
+"settings.install" = "설치";
+"settings.uninstall" = "제거";
+"settings.repair" = "복구";
+"settings.retry" = "재시도";
+"settings.cancel" = "취소";
+"settings.add" = "추가";
+
+/* 설정: 사용자 정의 Claude Code 경로 */
+"settings.addClaudeFork" = "Claude Code 포크 추가…";
+"settings.customPath.placeholder" = "~/.xxx/engine/cc";
+"settings.customPath.help" = "Claude Code 포크의 설정 디렉토리를 입력하세요 (settings.json 포함 또는 자동 생성)";
+"settings.customPath.invalid" = "디렉토리가 존재하지 않습니다";
+"settings.customPath.duplicate" = "이 경로는 이미 설정되어 있습니다";
+"settings.customPath.remove" = "이 사용자 정의 경로 제거";
+
+/* 설정: Display 섹션 제목 */
+"settings.display.system" = "시스템";
+"settings.display.notch" = "노치";
+"settings.display.panel" = "패널";
+"settings.picker.default" = "(기본값)";
+"settings.priceLocked" = "전용 가격 %@ 잠금 · 탭하여 구매";
+
+/* 설정: 패스 */
+"settings.pass.placeholder" = "구매 후 전용 카드가 잠금 해제됩니다";
+
+/* 설정: 정보 */
+"settings.website" = "웹사이트";
+"settings.joinCommunity" = "커뮤니티 참여";
+"settings.reportBug" = "버그 신고";
+"settings.sendFeedback" = "피드백 보내기";
+"settings.acknowledgements" = "오픈소스 라이선스";
+"settings.slider.default" = "· 기본값";
+"settings.slider.reset" = "기본값으로 재설정";
+
+/* WeChat QR 시트 */
+"wechat.community.title" = "👾 My Island 커뮤니티";
+"wechat.scanToJoin" = "WeChat으로 스캔하여 참여";
+"wechat.close" = "닫기";
+
+/* 사운드 설정 */
+"sound.enable" = "사운드 효과 활성화";
+"sound.volume" = "음량";
+"sound.section.session" = "세션";
+"sound.section.interactions" = "상호작용";
+"sound.section.system" = "시스템";
+"sound.section.filters" = "필터";
+"sound.autoDetectProbes" = "프로브 세션 자동 감지";
+"sound.autoDetectProbes.help" = "헬스 체크 세션을 자동으로 음소거합니다 (예: CodexBar ClaudeProbe)";
+"sound.preview" = "미리 듣기";
+
+/* 사운드 카테고리 */
+"sound.cat.sessionStart" = "세션 시작";
+"sound.cat.taskAcknowledge" = "작업 확인";
+"sound.cat.taskComplete" = "작업 완료";
+"sound.cat.taskError" = "작업 오류";
+"sound.cat.inputRequired" = "승인 필요";
+"sound.cat.resourceLimit" = "컨텍스트 제한";
+"sound.cat.userSpam" = "연속 전송 감지";
+
+/* 사운드 카테고리 설명 */
+"sound.desc.sessionStart" = "새 Claude / Codex / Gemini 세션";
+"sound.desc.taskAcknowledge" = "프롬프트를 제출했습니다";
+"sound.desc.taskComplete" = "AI가 턴을 완료했습니다";
+"sound.desc.taskError" = "도구 실패 또는 API 오류";
+"sound.desc.inputRequired" = "권한 승인 또는 질문 응답 대기 중";
+"sound.desc.resourceLimit" = "컨텍스트 창 압축 중";
+"sound.desc.userSpam" = "10초 내 3회 이상 전송";
+
+/* Hook 파일 감시 */
+"hookWatcher.restored" = "Hooks 복원됨 — CLI hooks가 다른 도구에 의해 수정되었습니다.";
+"hookWatcher.rateLimited" = "Hooks가 계속 제거됩니다. 설정 → 일반 → CLI Hooks에서 관리하세요.";
+
+/* 사용량 */
+"usage.activate" = "사용량 표시";
+"usage.activate.tip" = "탭하여 사용량 보기";
+"usage.activate.loading" = "사용량 데이터 로드 중...";
+"settings.showUsage" = "사용량 표시";
+"settings.showUsageHelp" = "노치 패널 헤더에 API 사용량 데이터를 표시합니다";
+"settings.usageValueMode" = "표시 값";
+"settings.usageValueMode.used" = "사용량";
+"settings.usageValueMode.remaining" = "잔여량";
