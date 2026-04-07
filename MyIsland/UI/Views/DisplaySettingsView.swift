@@ -30,6 +30,11 @@ struct DisplaySettingsView: View {
                     Spacer()
                 }
 
+                // Screen selection
+                ScreenPickerRow(screenSelector: ScreenSelector.shared)
+
+                Divider().background(Color.white.opacity(0.08))
+
                 // Notch Layout Mode
                 notchLayoutSection
 

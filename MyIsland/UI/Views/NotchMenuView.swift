@@ -42,10 +42,6 @@ struct NotchMenuView: View {
                 .background(Color.white.opacity(0.08))
                 .padding(.vertical, 4)
 
-            // Appearance settings
-            ScreenPickerRow(screenSelector: screenSelector)
-            SoundPickerRow(soundSelector: soundSelector)
-
             // Sound settings (full panel)
             MenuRow(
                 icon: "speaker.wave.2",
