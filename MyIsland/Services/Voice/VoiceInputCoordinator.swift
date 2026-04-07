@@ -187,18 +187,12 @@ final class VoiceInputCoordinator: ObservableObject {
             return
         }
 
-        // Directly send text to the active Claude session (no clipboard)
+        let targetApp = self.capturedApp
         Task {
             let sent = await sendToActiveSession(text)
             if !sent {
-                // Restore focus to the app that was active when recording started
-                if let app = self.capturedApp {
-                    app.activate()
-                    // Brief delay to let the app gain focus before typing
-                    try? await Task.sleep(for: .milliseconds(100))
-                }
                 await MainActor.run {
-                    self.simulateTyping(text)
+                    self.pasteText(text, to: targetApp)
                 }
             }
         }
@@ -207,16 +201,45 @@ final class VoiceInputCoordinator: ObservableObject {
         scheduleReset()
     }
 
-    /// Type text character by character via CGEvent (no clipboard involved)
-    private func simulateTyping(_ text: String) {
-        let source = CGEventSource(stateID: .hidSystemState)
-        for char in text.utf16 {
-            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true)
-            keyDown?.keyboardSetUnicodeString(stringLength: 1, unicodeString: [char])
-            keyDown?.post(tap: .cghidEventTap)
+    /// Paste text via clipboard + Cmd+V, which is reliable for all apps and languages
+    private func pasteText(_ text: String, to app: NSRunningApplication?) {
+        guard AXIsProcessTrusted() else {
+            print("[Voice] Accessibility permission not granted, cannot paste text")
+            return
+        }
 
-            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false)
-            keyUp?.post(tap: .cghidEventTap)
+        // Save current clipboard content
+        let pasteboard = NSPasteboard.general
+        let previousContents = pasteboard.string(forType: .string)
+
+        // Set transcribed text to clipboard
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+
+        // Restore focus to the original app
+        if let app {
+            app.activate(options: .activateIgnoringOtherApps)
+            // Give the app time to gain focus
+            usleep(150_000) // 150ms
+        }
+
+        // Simulate Cmd+V paste
+        let source = CGEventSource(stateID: .hidSystemState)
+        // keyCode 9 = 'V'
+        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true)
+        keyDown?.flags = .maskCommand
+        keyDown?.post(tap: .cghidEventTap)
+
+        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false)
+        keyUp?.flags = .maskCommand
+        keyUp?.post(tap: .cghidEventTap)
+
+        // Restore previous clipboard after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if let previous = previousContents {
+                pasteboard.clearContents()
+                pasteboard.setString(previous, forType: .string)
+            }
         }
     }
 
