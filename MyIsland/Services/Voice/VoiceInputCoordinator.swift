@@ -153,12 +153,14 @@ final class VoiceInputCoordinator: ObservableObject {
         if let frontApp = NSWorkspace.shared.frontmostApplication {
             capturedAppIcon = frontApp.icon
             capturedApp = frontApp
+            print("[Voice] Captured frontmost app: \(frontApp.localizedName ?? "unknown") (pid: \(frontApp.processIdentifier))")
         }
 
         // Start recording
         do {
             try audioRecorder.startRecording()
         } catch {
+            print("[Voice] Failed to start recording: \(error)")
             voiceState = .error("麦克风错误")
             scheduleReset()
             return
@@ -172,12 +174,33 @@ final class VoiceInputCoordinator: ObservableObject {
         // Start streaming recognition
         speechManager.startStreaming()
         voiceState = .recording
+        print("[Voice] Recording started")
     }
 
     private func endSession() {
         audioRecorder.stopRecording()
         speechManager.stopStreaming()
         voiceState = .processing
+        print("[Voice] Recording stopped, processing... (partialText: '\(speechManager.partialText)')")
+
+        // Safety timeout: if no final result within 5 seconds, use partial text or show error
+        resetTask?.cancel()
+        resetTask = Task {
+            try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
+            // Still processing after timeout - use partial text if available
+            if self.voiceState == .processing {
+                let partial = self.speechManager.partialText
+                print("[Voice] Processing timeout, partialText: '\(partial)'")
+                self.speechManager.cancel()
+                if !partial.isEmpty {
+                    self.handleFinalResult(partial)
+                } else {
+                    self.voiceState = .error("识别超时")
+                    self.scheduleReset()
+                }
+            }
+        }
     }
 
     private func handleFinalResult(_ text: String) {
@@ -187,15 +210,13 @@ final class VoiceInputCoordinator: ObservableObject {
             return
         }
 
+        print("[Voice] Final result: '\(text)'")
+
         let targetApp = self.capturedApp
-        Task {
-            let sent = await sendToActiveSession(text)
-            if !sent {
-                await MainActor.run {
-                    self.pasteText(text, to: targetApp)
-                }
-            }
-        }
+        print("[Voice] Target app: \(targetApp?.localizedName ?? "nil"), AXTrusted: \(AXIsProcessTrusted())")
+
+        // Directly paste to the target app (skip tmux for non-terminal apps)
+        pasteText(text, to: targetApp)
 
         voiceState = .success(text)
         scheduleReset()
@@ -215,70 +236,42 @@ final class VoiceInputCoordinator: ObservableObject {
         // Set transcribed text to clipboard
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
+        print("[Voice] Clipboard set to: '\(text)'")
 
         // Restore focus to the original app
         if let app {
-            app.activate(options: .activateIgnoringOtherApps)
+            let activated = app.activate(options: .activateIgnoringOtherApps)
+            print("[Voice] Activated app '\(app.localizedName ?? "unknown")': \(activated)")
             // Give the app time to gain focus
-            usleep(150_000) // 150ms
+            usleep(200_000) // 200ms
+        } else {
+            print("[Voice] No target app to activate")
         }
 
         // Simulate Cmd+V paste
-        let source = CGEventSource(stateID: .hidSystemState)
-        // keyCode 9 = 'V'
-        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true)
-        keyDown?.flags = .maskCommand
-        keyDown?.post(tap: .cghidEventTap)
-
-        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false)
-        keyUp?.flags = .maskCommand
-        keyUp?.post(tap: .cghidEventTap)
+        guard let source = CGEventSource(stateID: .hidSystemState) else {
+            print("[Voice] Failed to create CGEventSource")
+            return
+        }
+        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true),
+              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false) else {
+            print("[Voice] Failed to create CGEvent for Cmd+V")
+            return
+        }
+        keyDown.flags = .maskCommand
+        keyDown.post(tap: .cghidEventTap)
+        keyUp.flags = .maskCommand
+        keyUp.post(tap: .cghidEventTap)
+        print("[Voice] Cmd+V paste event posted")
 
         // Restore previous clipboard after a short delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             if let previous = previousContents {
                 pasteboard.clearContents()
                 pasteboard.setString(previous, forType: .string)
+                print("[Voice] Clipboard restored")
             }
         }
-    }
-
-    // MARK: - Send to Session
-
-    private func sendToActiveSession(_ text: String) async -> Bool {
-        // Find the most recently active session that accepts input
-        let monitor = await MainActor.run { () -> ClaudeSessionMonitor? in
-            // Access through NotchView's session monitor is tricky from here
-            // Use a simpler approach: search tmux panes directly
-            return nil
-        }
-
-        // Search for tmux pane running claude
-        guard let tmuxPath = await TmuxPathFinder.shared.getTmuxPath() else {
-            return false
-        }
-
-        // List all tmux panes and find ones running claude
-        guard let output = try? await ProcessExecutor.shared.run(
-            tmuxPath,
-            arguments: ["list-panes", "-a", "-F", "#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_tty}"]
-        ), !output.isEmpty else { return false }
-
-        // Find first pane running claude
-        for line in output.components(separatedBy: "\n") {
-            let parts = line.split(separator: " ", maxSplits: 2)
-            guard parts.count >= 2 else { continue }
-            let target = String(parts[0])
-            let command = String(parts[1]).lowercased()
-
-            if command.contains("claude") || command.contains("codex") {
-                if let tmuxTarget = TmuxTarget(from: target) {
-                    return await ToolApprovalHandler.shared.sendMessage(text, to: tmuxTarget)
-                }
-            }
-        }
-
-        return false
     }
 
     // MARK: - Cancel
