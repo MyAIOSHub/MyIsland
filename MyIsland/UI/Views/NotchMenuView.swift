@@ -81,9 +81,7 @@ struct NotchMenuView: View {
                 voiceCoordinator.isEnabled.toggle()
             }
 
-            Divider()
-                .background(Color.white.opacity(0.08))
-                .padding(.vertical, 4)
+            AccessibilityRow(isEnabled: AXIsProcessTrusted())
 
             // System settings
             MenuToggleRow(
@@ -104,12 +102,9 @@ struct NotchMenuView: View {
                 }
             }
 
-            // Hooks section (CLI + IDE)
-            Text("Hooks")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white.opacity(0.4))
-                .padding(.horizontal, 12)
-                .padding(.top, 4)
+            Divider()
+                .background(Color.white.opacity(0.08))
+                .padding(.vertical, 4)
 
             MenuToggleRow(
                     icon: "terminal",
@@ -185,8 +180,6 @@ struct NotchMenuView: View {
                 isInstalled: AntigravityWatcher.shared.isInstalled,
                 isRunning: AntigravityWatcher.shared.isAppRunning
             )
-
-            AccessibilityRow(isEnabled: AXIsProcessTrusted())
 
             Divider()
                 .background(Color.white.opacity(0.08))
