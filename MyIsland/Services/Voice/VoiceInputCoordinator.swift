@@ -9,6 +9,9 @@ import AppKit
 import Combine
 import AVFoundation
 import Speech
+import os.log
+
+private let logger = Logger(subsystem: "com.myisland", category: "Voice")
 
 // MARK: - Voice Input State
 
@@ -153,14 +156,16 @@ final class VoiceInputCoordinator: ObservableObject {
         if let frontApp = NSWorkspace.shared.frontmostApplication {
             capturedAppIcon = frontApp.icon
             capturedApp = frontApp
-            print("[Voice] Captured frontmost app: \(frontApp.localizedName ?? "unknown") (pid: \(frontApp.processIdentifier))")
+            let name = frontApp.localizedName ?? "unknown"
+            let pid = frontApp.processIdentifier
+            logger.info("[Voice] Captured frontmost app: \(name, privacy: .public) (pid: \(pid))")
         }
 
         // Start recording
         do {
             try audioRecorder.startRecording()
         } catch {
-            print("[Voice] Failed to start recording: \(error)")
+            logger.error("[Voice] Failed to start recording: \(error, privacy: .public)")
             voiceState = .error("麦克风错误")
             scheduleReset()
             return
@@ -174,14 +179,15 @@ final class VoiceInputCoordinator: ObservableObject {
         // Start streaming recognition
         speechManager.startStreaming()
         voiceState = .recording
-        print("[Voice] Recording started")
+        logger.info("[Voice] Recording started")
     }
 
     private func endSession() {
         audioRecorder.stopRecording()
         speechManager.stopStreaming()
         voiceState = .processing
-        print("[Voice] Recording stopped, processing... (partialText: '\(speechManager.partialText)')")
+        let currentPartial = speechManager.partialText
+        logger.info("[Voice] Recording stopped, processing... (partialText: '\(currentPartial, privacy: .public)')")
 
         // Safety timeout: if no final result within 5 seconds, use partial text or show error
         resetTask?.cancel()
@@ -191,7 +197,7 @@ final class VoiceInputCoordinator: ObservableObject {
             // Still processing after timeout - use partial text if available
             if self.voiceState == .processing {
                 let partial = self.speechManager.partialText
-                print("[Voice] Processing timeout, partialText: '\(partial)'")
+                logger.info("[Voice] Processing timeout, partialText: '\(partial, privacy: .public)'")
                 self.speechManager.cancel()
                 if !partial.isEmpty {
                     self.handleFinalResult(partial)
@@ -210,10 +216,12 @@ final class VoiceInputCoordinator: ObservableObject {
             return
         }
 
-        print("[Voice] Final result: '\(text)'")
+        logger.info("[Voice] Final result: '\(text, privacy: .public)'")
 
         let targetApp = self.capturedApp
-        print("[Voice] Target app: \(targetApp?.localizedName ?? "nil"), AXTrusted: \(AXIsProcessTrusted())")
+        let appName = targetApp?.localizedName ?? "nil"
+        let axTrusted = AXIsProcessTrusted()
+        logger.info("[Voice] Target app: \(appName, privacy: .public), AXTrusted: \(axTrusted)")
 
         // Directly paste to the target app (skip tmux for non-terminal apps)
         pasteText(text, to: targetApp)
@@ -225,7 +233,7 @@ final class VoiceInputCoordinator: ObservableObject {
     /// Paste text via clipboard + Cmd+V, which is reliable for all apps and languages
     private func pasteText(_ text: String, to app: NSRunningApplication?) {
         guard AXIsProcessTrusted() else {
-            print("[Voice] Accessibility permission not granted, cannot paste text")
+            logger.error("[Voice] Accessibility not granted, cannot paste")
             return
         }
 
@@ -236,40 +244,40 @@ final class VoiceInputCoordinator: ObservableObject {
         // Set transcribed text to clipboard
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
-        print("[Voice] Clipboard set to: '\(text)'")
+        logger.info("[Voice] Clipboard set, text length: \(text.count)")
 
         // Restore focus to the original app
         if let app {
             let activated = app.activate(options: .activateIgnoringOtherApps)
-            print("[Voice] Activated app '\(app.localizedName ?? "unknown")': \(activated)")
+            let name = app.localizedName ?? "unknown"
+            logger.info("[Voice] Activated app '\(name, privacy: .public)': \(activated)")
             // Give the app time to gain focus
             usleep(200_000) // 200ms
         } else {
-            print("[Voice] No target app to activate")
+            logger.warning("[Voice] No target app to activate")
         }
 
         // Simulate Cmd+V paste
         guard let source = CGEventSource(stateID: .hidSystemState) else {
-            print("[Voice] Failed to create CGEventSource")
+            logger.error("[Voice] Failed to create CGEventSource")
             return
         }
         guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true),
               let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false) else {
-            print("[Voice] Failed to create CGEvent for Cmd+V")
+            logger.error("[Voice] Failed to create CGEvent for Cmd+V")
             return
         }
         keyDown.flags = .maskCommand
         keyDown.post(tap: .cghidEventTap)
         keyUp.flags = .maskCommand
         keyUp.post(tap: .cghidEventTap)
-        print("[Voice] Cmd+V paste event posted")
+        logger.info("[Voice] Cmd+V paste event posted")
 
         // Restore previous clipboard after a short delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             if let previous = previousContents {
                 pasteboard.clearContents()
                 pasteboard.setString(previous, forType: .string)
-                print("[Voice] Clipboard restored")
             }
         }
     }

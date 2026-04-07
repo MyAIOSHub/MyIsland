@@ -1,6 +1,9 @@
 import Speech
 import AVFoundation
 import Combine
+import os.log
+
+private let logger = Logger(subsystem: "com.myisland", category: "Voice")
 
 @MainActor
 final class VoiceSpeechManager: ObservableObject {
@@ -51,19 +54,21 @@ final class VoiceSpeechManager: ObservableObject {
                     let text = result.bestTranscription.formattedString
                     self.partialText = text
                     if result.isFinal {
-                        print("[Voice] Speech final result: '\(text)'")
+                        logger.info("[Voice] Speech final result: '\(text, privacy: .public)'")
                         self.finalText = text
                         self.isRecognizing = false
                     }
                 }
                 if let error {
-                    print("[Voice] Speech error: \(error.localizedDescription)")
+                    let desc = error.localizedDescription
+                    logger.error("[Voice] Speech error: \(desc, privacy: .public)")
                     if self.finalText == nil {
                         if !self.partialText.isEmpty {
-                            print("[Voice] Using partial text as final: '\(self.partialText)'")
+                            let partial = self.partialText
+                            logger.info("[Voice] Using partial text as final: '\(partial, privacy: .public)'")
                             self.finalText = self.partialText
                         } else {
-                            print("[Voice] Speech error with no text available")
+                            logger.warning("[Voice] Speech error with no text available")
                         }
                         self.isRecognizing = false
                     }
