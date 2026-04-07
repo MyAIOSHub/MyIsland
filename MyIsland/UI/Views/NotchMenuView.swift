@@ -108,8 +108,8 @@ struct NotchMenuView: View {
                 }
             }
 
-            // CLI Hooks section
-            Text("CLI Hooks")
+            // Hooks section (CLI + IDE)
+            Text("Hooks")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(.white.opacity(0.4))
                 .padding(.horizontal, 12)
@@ -180,14 +180,17 @@ struct NotchMenuView: View {
                     isGatewayRunning: openclawGatewayRunning
                 )
 
+            // Antigravity (IDE)
+            AntigravityHookRow(
+                isEnabled: .init(
+                    get: { AntigravityWatcher.shared.isEnabled },
+                    set: { AntigravityWatcher.shared.isEnabled = $0 }
+                ),
+                isInstalled: AntigravityWatcher.shared.isInstalled,
+                isRunning: AntigravityWatcher.shared.isAppRunning
+            )
+
             AccessibilityRow(isEnabled: AXIsProcessTrusted())
-
-            Divider()
-                .background(Color.white.opacity(0.08))
-                .padding(.vertical, 4)
-
-            // IDE Extensions section
-            IDEExtensionsSection()
 
             Divider()
                 .background(Color.white.opacity(0.08))
@@ -636,30 +639,6 @@ struct MenuToggleRow: View {
     }
 }
 
-// MARK: - IDE Extensions Section
-
-struct IDEExtensionsSection: View {
-    @State private var antigravityEnabled = AntigravityWatcher.shared.isEnabled
-    private let antigravityInstalled = AntigravityWatcher.shared.isInstalled
-    private let antigravityRunning = AntigravityWatcher.shared.isAppRunning
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("IDE 扩展")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white.opacity(0.4))
-                .padding(.horizontal, 12)
-                .padding(.top, 4)
-
-            // Antigravity built-in agent hook
-            AntigravityHookRow(
-                isEnabled: $antigravityEnabled,
-                isInstalled: antigravityInstalled,
-                isRunning: antigravityRunning
-            )
-        }
-    }
-}
 
 // MARK: - Antigravity Hook Row
 
