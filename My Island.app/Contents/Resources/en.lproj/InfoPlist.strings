@@ -1,2 +1,0 @@
-/* InfoPlist.strings (English) */
-"NSAppleEventsUsageDescription" = "My Island needs to control terminal apps (iTerm2, Terminal) to jump to the correct window, tab, and session when you click a notification.";

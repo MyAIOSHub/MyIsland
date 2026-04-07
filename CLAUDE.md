@@ -5,29 +5,46 @@ macOS Notch Status Panel - Agent monitoring and notification app.
 ## Project Structure
 
 ```
-My Island.app/              # macOS app bundle
-  Contents/
-    Info.plist              # App configuration (bundle ID: app.myisland.macos)
-    MacOS/my-island         # Main executable (Universal Binary: x86_64 + arm64)
-    Helpers/my-island-bridge  # Helper executable
-    Frameworks/
-      Sentry.framework      # Error reporting
-      Sparkle.framework     # Auto-update
-    Resources/
-      AppIcon.icns          # App icon
-      Fonts/                # Custom fonts (DepartureMono)
-      Sounds/               # Audio assets
-      en.lproj/             # English localization
-      zh-Hans.lproj/        # Simplified Chinese localization
-      ja.lproj/             # Japanese localization
-      ko.lproj/             # Korean localization
-    _CodeSignature/         # Code signing resources
+MyIsland.xcodeproj/          # Xcode project (SPM dependencies)
+MyIsland/                    # Source code (auto-synced by Xcode)
+  App/                       # App entry point, delegates, window management
+    MyIslandApp.swift        # @main entry point
+    AppDelegate.swift
+    WindowManager.swift
+    ScreenObserver.swift
+  Core/                      # Core logic (settings, geometry, view models)
+  Events/                    # Event monitoring
+  Models/                    # Data models
+  Services/                  # Business logic
+    Chat/                    # Chat history
+    Hooks/                   # CLI hook integration (socket server)
+    Pet/                     # Pet gacha system
+    Session/                 # Agent session monitoring
+    Shared/                  # Process utilities
+    Sound/                   # Sound playback
+    State/                   # State management, file sync
+    Tmux/                    # Tmux integration, tool approval
+    Update/                  # Sparkle auto-update
+    Voice/                   # Voice input (mic + speech recognition)
+    Window/                  # Window finder/focuser, Yabai
+  UI/                        # SwiftUI views
+    Components/              # Reusable components
+    Views/                   # View implementations
+    Window/                  # NotchWindow controllers
+  Utilities/                 # Helpers
+  Resources/                 # Entitlements, sounds, images, localization, fonts
+  Assets.xcassets/           # App icon, colors
+  Info.plist                 # App configuration
+scripts/                     # Build and release scripts
 ```
 
 ## Key Info
 
 - **Bundle ID:** app.myisland.macos
-- **Min macOS:** 14.0
-- **Version:** 1.0.18
-- **Type:** Menu bar app (LSUIElement)
+- **Product Name:** My Island
+- **Min macOS:** 15.6
+- **Swift Version:** 5.0
+- **Dependencies:** Sparkle (auto-update), Mixpanel (analytics), swift-markdown, json-logic-swift
 - **Languages:** en, zh-Hans, ja, ko
+- **Build:** `xcodebuild -scheme MyIsland -configuration Release`
+- **Launch command:** `pkill -9 -f "My Island"; xattr -cr ~/Library/Developer/Xcode/DerivedData/MyIsland-*/Build/Products/Debug/My\ Island.app && open ~/Library/Developer/Xcode/DerivedData/MyIsland-*/Build/Products/Debug/My\ Island.app`

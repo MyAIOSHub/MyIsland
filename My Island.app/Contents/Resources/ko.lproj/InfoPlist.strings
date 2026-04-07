@@ -1,2 +1,0 @@
-/* InfoPlist.strings (한국어) */
-"NSAppleEventsUsageDescription" = "My Island은 알림을 클릭할 때 올바른 창, 탭, 세션으로 이동하기 위해 터미널 앱(iTerm2, Terminal)을 제어해야 합니다.";

@@ -1,2 +1,0 @@
-/* InfoPlist.strings (日本語) */
-"NSAppleEventsUsageDescription" = "My Island は、通知をクリックした際に正しいウィンドウ、タブ、セッションに移動するために、ターミナルアプリ（iTerm2、Terminal）を制御する必要があります。";
