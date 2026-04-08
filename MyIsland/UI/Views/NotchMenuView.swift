@@ -39,8 +39,8 @@ struct NotchMenuView: View {
             }
 
             Divider()
-                .background(Color.white.opacity(0.08))
-                .padding(.vertical, 4)
+                .background(DesignTokens.Border.subtle)
+                .padding(.vertical, DesignTokens.Spacing.xxs)
 
             // Sound settings (full panel)
             MenuRow(
@@ -72,13 +72,14 @@ struct NotchMenuView: View {
                 }
             }
 
-            // Voice input toggle
-            MenuToggleRow(
+            // Voice settings
+            MenuRow(
                 icon: "mic",
-                label: "语音输入 (Fn)",
-                isOn: voiceCoordinator.isEnabled
+                label: "语音设置"
             ) {
-                voiceCoordinator.isEnabled.toggle()
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    viewModel.contentType = .voiceSettings
+                }
             }
 
             AccessibilityRow(isEnabled: AXIsProcessTrusted())
@@ -103,8 +104,8 @@ struct NotchMenuView: View {
             }
 
             Divider()
-                .background(Color.white.opacity(0.08))
-                .padding(.vertical, 4)
+                .background(DesignTokens.Border.subtle)
+                .padding(.vertical, DesignTokens.Spacing.xxs)
 
             MenuToggleRow(
                     icon: "terminal",
@@ -182,8 +183,10 @@ struct NotchMenuView: View {
             )
 
             Divider()
-                .background(Color.white.opacity(0.08))
-                .padding(.vertical, 4)
+                .background(DesignTokens.Border.subtle)
+                .padding(.vertical, DesignTokens.Spacing.xxs)
+
+            UpdateRow(updateManager: updateManager)
 
             MenuRow(
                 icon: "xmark.circle",
@@ -268,7 +271,7 @@ struct UpdateRow: View {
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered && isInteractive ? Color.white.opacity(0.08) : Color.clear)
+                    .fill(isHovered && isInteractive ? DesignTokens.Surface.hover : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -292,7 +295,7 @@ struct UpdateRow: View {
                 Image(systemName: "checkmark")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundColor(TerminalColors.green)
-                Text("Up to date")
+                Text("已是最新")
                     .font(.system(size: 11))
                     .foregroundColor(TerminalColors.green)
             }
@@ -345,7 +348,7 @@ struct UpdateRow: View {
             }
 
         case .error:
-            Text("Retry")
+            Text("重试")
                 .font(.system(size: 11))
                 .foregroundColor(.white.opacity(0.5))
         }
@@ -379,9 +382,9 @@ struct UpdateRow: View {
     private var iconColor: Color {
         switch updateManager.state {
         case .idle:
-            return .white.opacity(isHovered ? 1.0 : 0.7)
+            return isHovered ? DesignTokens.Text.primary : DesignTokens.Text.secondary
         case .checking:
-            return .white.opacity(0.7)
+            return DesignTokens.Text.secondary
         case .upToDate:
             return TerminalColors.green
         case .found, .readyToInstall:
@@ -400,32 +403,32 @@ struct UpdateRow: View {
     private var label: String {
         switch updateManager.state {
         case .idle:
-            return "Check for Updates"
+            return "检查更新"
         case .checking:
-            return "Checking..."
+            return "检查中..."
         case .upToDate:
-            return "Check for Updates"
+            return "检查更新"
         case .found:
-            return "Download Update"
+            return "下载更新"
         case .downloading:
-            return "Downloading..."
+            return "下载中..."
         case .extracting:
-            return "Extracting..."
+            return "解压中..."
         case .readyToInstall:
-            return "Install & Relaunch"
+            return "重启并安装"
         case .installing:
-            return "Installing..."
+            return "安装中..."
         case .error:
-            return "Update failed"
+            return "更新失败"
         }
     }
 
     private var labelColor: Color {
         switch updateManager.state {
         case .idle, .upToDate:
-            return .white.opacity(isHovered ? 1.0 : 0.7)
+            return isHovered ? DesignTokens.Text.primary : DesignTokens.Text.secondary
         case .checking, .downloading, .extracting, .installing:
-            return .white.opacity(0.9)
+            return DesignTokens.Text.primary
         case .found, .readyToInstall:
             return TerminalColors.green
         case .error:
@@ -455,6 +458,229 @@ struct UpdateRow: View {
         default:
             break
         }
+    }
+}
+
+// MARK: - ASR Mode Selector Row
+
+struct ASRModeRow: View {
+    @ObservedObject private var processor = ASRPostProcessor.shared
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "text.badge.checkmark")
+                .font(.system(size: 12))
+                .foregroundColor(textColor)
+                .frame(width: 16)
+
+            Text("ASR模式")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(textColor)
+
+            Spacer()
+
+            HStack(spacing: 2) {
+                ForEach(ASRMode.allCases, id: \.self) { mode in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            processor.selectedMode = mode
+                        }
+                    } label: {
+                        Text(mode.displayName)
+                            .font(.system(size: 10, weight: processor.selectedMode == mode ? .bold : .regular))
+                            .foregroundColor(processor.selectedMode == mode ? .black : .white.opacity(0.5))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(processor.selectedMode == mode ? Color.white : DesignTokens.Surface.hover)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovered ? DesignTokens.Surface.hover : Color.clear)
+        )
+        .onHover { isHovered = $0 }
+    }
+
+    private var textColor: Color {
+        .white.opacity(isHovered ? 1.0 : 0.7)
+    }
+}
+
+// MARK: - API Key Input Row
+
+struct APIKeyRow: View {
+    @ObservedObject private var processor = ASRPostProcessor.shared
+    @State private var isEditing = false
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "key.fill")
+                .font(.system(size: 12))
+                .foregroundColor(textColor)
+                .frame(width: 16)
+
+            Text("LLM API Key")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(textColor)
+
+            Spacer()
+
+            if isEditing {
+                SecureField("sk-...", text: $processor.apiKey)
+                    .font(.system(size: 11, design: .monospaced))
+                    .textFieldStyle(.plain)
+                    .frame(width: 120)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.white.opacity(0.1))
+                    )
+                    .onSubmit { isEditing = false }
+
+                Button {
+                    isEditing = false
+                } label: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.green)
+                }
+                .buttonStyle(.plain)
+            } else {
+                if processor.hasApiKey {
+                    Text("sk-...\(String(processor.apiKey.suffix(4)))")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.4))
+                } else {
+                    Text("未设置")
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.3))
+                }
+
+                Button {
+                    isEditing = true
+                } label: {
+                    Text(processor.hasApiKey ? "修改" : "设置")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.white)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovered ? DesignTokens.Surface.hover : Color.clear)
+        )
+        .onHover { isHovered = $0 }
+    }
+
+    private var textColor: Color {
+        .white.opacity(isHovered ? 1.0 : 0.7)
+    }
+}
+
+// MARK: - Base URL Input Row
+
+struct BaseURLRow: View {
+    @ObservedObject private var processor = ASRPostProcessor.shared
+    @State private var isEditing = false
+    @State private var isHovered = false
+
+    private var displayURL: String {
+        let url = processor.baseURL
+        // Show shortened version: remove https:// prefix
+        return url.replacingOccurrences(of: "https://", with: "").prefix(30) + (url.count > 38 ? "..." : "")
+    }
+
+    private var isDefault: Bool {
+        processor.baseURL == ASRPostProcessor.defaultBaseURL
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "link")
+                .font(.system(size: 12))
+                .foregroundColor(textColor)
+                .frame(width: 16)
+
+            Text("Base URL")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(textColor)
+
+            Spacer()
+
+            if isEditing {
+                TextField("https://...", text: $processor.baseURL)
+                    .font(.system(size: 10, design: .monospaced))
+                    .textFieldStyle(.plain)
+                    .frame(width: 160)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.white.opacity(0.1))
+                    )
+                    .onSubmit { isEditing = false }
+
+                Button {
+                    isEditing = false
+                } label: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.green)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Text(isDefault ? "百炼" : String(displayURL))
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.4))
+                    .lineLimit(1)
+
+                Button {
+                    isEditing = true
+                } label: {
+                    Text("修改")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.white)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovered ? DesignTokens.Surface.hover : Color.clear)
+        )
+        .onHover { isHovered = $0 }
+    }
+
+    private var textColor: Color {
+        .white.opacity(isHovered ? 1.0 : 0.7)
     }
 }
 
@@ -512,7 +738,7 @@ struct AccessibilityRow: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                .fill(isHovered ? DesignTokens.Surface.hover : Color.clear)
         )
         .onHover { isHovered = $0 }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -548,16 +774,16 @@ struct MenuRow: View {
                     .frame(width: 16)
 
                 Text(label)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(DesignTokens.Font.heading())
                     .foregroundColor(textColor)
 
                 Spacer()
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, DesignTokens.Spacing.md)
             .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.lg)
+                    .fill(isHovered ? DesignTokens.Surface.hover : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -566,9 +792,9 @@ struct MenuRow: View {
 
     private var textColor: Color {
         if isDestructive {
-            return Color(red: 1.0, green: 0.4, blue: 0.4)
+            return TerminalColors.red
         }
-        return .white.opacity(isHovered ? 1.0 : 0.7)
+        return isHovered ? DesignTokens.Text.primary : DesignTokens.Text.secondary
     }
 }
 
@@ -591,13 +817,13 @@ struct MenuToggleRow: View {
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(label)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(DesignTokens.Font.heading())
                         .foregroundColor(textColor)
 
                     if let subtitle {
                         Text(subtitle)
                             .font(.system(size: 9))
-                            .foregroundColor(.white.opacity(0.3))
+                            .foregroundColor(DesignTokens.Text.tertiary)
                             .lineLimit(1)
                     }
                 }
@@ -605,18 +831,18 @@ struct MenuToggleRow: View {
                 Spacer()
 
                 Circle()
-                    .fill(isOn ? TerminalColors.green : Color.white.opacity(0.3))
+                    .fill(isOn ? TerminalColors.green : DesignTokens.Text.tertiary)
                     .frame(width: 6, height: 6)
 
                 Text(isOn ? "已开启" : "关闭")
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.4))
+                    .font(DesignTokens.Font.body())
+                    .foregroundColor(DesignTokens.Text.tertiary)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, DesignTokens.Spacing.md)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                    .fill(isHovered ? DesignTokens.Surface.hover : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -624,7 +850,7 @@ struct MenuToggleRow: View {
     }
 
     private var textColor: Color {
-        .white.opacity(isHovered ? 1.0 : 0.7)
+        isHovered ? DesignTokens.Text.primary : DesignTokens.Text.secondary
     }
 }
 
@@ -687,7 +913,7 @@ struct AntigravityHookRow: View {
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered && isInstalled ? Color.white.opacity(0.08) : Color.clear)
+                    .fill(isHovered && isInstalled ? DesignTokens.Surface.hover : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -896,7 +1122,7 @@ struct OpenClawToggleRow: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                .fill(isHovered ? DesignTokens.Surface.hover : Color.clear)
         )
         .onHover { isHovered = $0 }
         .animation(.easeInOut(duration: 0.2), value: isEditingPort)

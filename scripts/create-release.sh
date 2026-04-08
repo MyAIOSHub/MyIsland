@@ -10,7 +10,7 @@ RELEASE_DIR="$PROJECT_DIR/releases"
 KEYS_DIR="$PROJECT_DIR/.sparkle-keys"
 
 # GitHub repository (owner/repo format)
-GITHUB_REPO="farouqaldori/myisland"
+GITHUB_REPO="MyAIOSHub/MyIsland"
 
 # Website repo for auto-updating appcast
 WEBSITE_DIR="${MY_ISLAND_WEBSITE:-$PROJECT_DIR/../MyIsland-website}"
@@ -51,7 +51,7 @@ if ! xcrun notarytool history --keychain-profile "$KEYCHAIN_PROFILE" &>/dev/null
     echo ""
     echo "  xcrun notarytool store-credentials \"$KEYCHAIN_PROFILE\" \\"
     echo "      --apple-id \"your@email.com\" \\"
-    echo "      --team-id \"2DKS5U9LV4\" \\"
+    echo "      --team-id \"42PBUJ247D\" \\"
     echo "      --password \"xxxx-xxxx-xxxx-xxxx\""
     echo ""
     echo "Create an app-specific password at: https://appleid.apple.com"

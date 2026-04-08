@@ -1,0 +1,2 @@
+/* InfoPlist.strings (简体中文) */
+"NSAppleEventsUsageDescription" = "My Island 需要控制终端应用（iTerm2、Terminal）以便在点击通知时跳转到正确的窗口、标签页和会话。";

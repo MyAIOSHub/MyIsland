@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>My Island</string>
+    <key>CFBundleDisplayName</key>
+    <string>My Island</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright 2025. All rights reserved.</string>
+
+    <!-- Sparkle Auto-Update -->
+    <key>SUFeedURL</key>
+    <string>https://github.com/MyAIOSHub/MyIsland/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>72TBmCR1stDi/o1T+unqwzXckwVlD/tQe/He3xmgbJ4=</string>
+
+    <!-- Voice Input Permissions -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>My Island 需要麦克风权限以使用语音输入功能，将语音转文字发送到 Claude 会话。</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>My Island 使用设备端语音识别将语音转换为文字。</string>
+</dict>
+</plist>

@@ -1,0 +1,361 @@
+/* ============================================================
+   Localizable.strings (简体中文)
+   My Island — macOS Notch 状态面板
+   ============================================================ */
+
+/* 引导页 */
+"onboarding.tagline" = "为你的 AI 编码工具打造灵动岛";
+"onboarding.feature.permissions" = "权限审批一目了然";
+"onboarding.feature.jump" = "点击直达正确窗口";
+"onboarding.feature.zeroConfig" = "零配置，开箱即用";
+"onboarding.start" = "开始使用";
+"onboarding.contextSwitches" = "上下文切换";
+"onboarding.agentsRunning" = "你有 4 个 Agent 在运行。";
+"onboarding.oneWaiting" = "其中一个一直在等你。";
+"onboarding.15hours" = "每周浪费 15 小时。";
+"onboarding.next" = "下一步";
+"onboarding.hooksHint" = "你可以在设置中管理各个 CLI 的 Hooks 配置。";
+"onboarding.everythingOneGlance" = "一切尽收眼底。";
+"onboarding.approveWithout" = "无需切换即可审批。";
+"onboarding.jumpToTab" = "精确跳转到目标 Tab。";
+"onboarding.yourEnvironment" = "你的环境";
+"onboarding.agents" = "AI 助手";
+"onboarding.terminals" = "终端 & IDE";
+"onboarding.detected" = "已检测";
+"onboarding.allConfigured" = "一切已就绪，无需任何操作。";
+"onboarding.startVibing" = "开始使用";
+"onboarding.startTrial" = "开始 5 天免费试用";
+"onboarding.getEarlyBird" = "获取早鸟价 — %@";
+"onboarding.alreadyHaveKey" = "已有 License Key？";
+"onboarding.checkEmail" = "请查收邮件中的 License Key";
+"onboarding.pasteKey" = "粘贴 License Key";
+"onboarding.reopenCheckout" = "重新打开购买页";
+"onboarding.startTrialInstead" = "先试用";
+
+/* 权限审批 */
+"approval.operateInTerminal" = "请在终端中操作";
+"approval.goToTerminal" = "前往终端";
+"approval.deny" = "拒绝";
+"approval.allow" = "允许一次";
+"approval.always" = "始终允许";
+"approval.allowAll" = "全部允许";
+"approval.bypass" = "自动批准";
+"approval.detailsUnavailable" = "（%@ - 详情不可用）";
+"approval.detail.moreLines" = "+%lld 行";
+"approval.detail.newFile" = "新文件";
+
+/* 问答 / AskUserQuestion */
+"question.waiting" = "Claude 正在等待回答";
+"question.answerInTerminal" = "请在终端中回答";
+"question.claudeQuestion" = "Claude 的提问";
+"question.count" = "（%lld 个问题）";
+"question.multiSelect" = "多选";
+"question.confirmSelection" = "确认选择（%lld）";
+"question.submitAll" = "提交所有回答";
+"question.answerAllWarning" = "请回答所有问题";
+
+/* 退出计划模式 */
+"exitPlan.title" = "退出计划模式";
+"exitPlan.tag" = "计划";
+"exitPlan.bypass" = "自动批准权限";
+"exitPlan.bypassDesc" = "自动批准所有权限请求";
+"exitPlan.acceptEdits" = "自动接受编辑";
+"exitPlan.acceptEditsDesc" = "仅自动批准文件编辑";
+"exitPlan.manualApprove" = "手动审批";
+"exitPlan.manualApproveDesc" = "逐一审核 · 最安全";
+"exitPlan.feedbackPlaceholder" = "告诉 Claude 需要修改什么…";
+"exitPlan.requestedPermissions" = "请求的权限：";
+
+/* 设置菜单 */
+"menu.launchAtLogin" = "登录时打开";
+"menu.display" = "显示器";
+"menu.automatic" = "自动";
+"menu.automaticDesc" = "优先内置屏幕，其次主屏幕";
+"menu.auto" = "自动";
+"menu.builtIn" = "内置";
+"menu.main" = "主屏幕";
+"menu.layout" = "布局";
+"layout.clean" = "简洁";
+"layout.detailed" = "详细";
+"layout.cleanDesc" = "给菜单栏图标让路";
+"layout.detailedDesc" = "会话标题和状态一目了然";
+"menu.modifierKey" = "修饰键";
+"menu.labs" = "实验室";
+"menu.labs.warpTabJump" = "Warp 标签页跳转";
+"menu.helpImprove" = "帮助改进 My Island";
+"menu.exportDiagnostics" = "导出诊断报告";
+"menu.exportDiagnosticsFooter" = "包含系统信息和脱敏日志，不含个人数据。";
+"menu.creator" = "开发者";
+"menu.testSentry" = "测试 Sentry";
+"menu.testSentryDetail" = "发送测试事件";
+"menu.debugLayout" = "调试布局";
+"menu.quit" = "退出 My Island";
+"menu.sentryTestTitle" = "Sentry 测试";
+"menu.sentryTestMessage" = "测试事件已发送！请稍后查看 Sentry 控制台。";
+"menu.ok" = "好";
+
+/* 会话 */
+"session.showAll" = "显示全部 %lld 个会话";
+"session.you" = "你：";
+"session.restartForLive" = "重启会话以启用实时追踪";
+"session.interrupted" = "已中断";
+"session.doneTag" = "完成";
+"session.ready" = "就绪";
+"session.mayNeedAttention" = "可能需要关注";
+"child_agents.running_%d" = "运行 %d 个代理";
+"session.compacting" = "压缩上下文...";
+"session.compactComplete" = "对话已压缩";
+"session.waitingForSession" = "等待会话";
+"session.emptyFirstInstall" = "小岛等待中";
+"session.emptyFirstInstallHint" = "开始写代码，岛屿自动点亮";
+"session.hideFromPanel" = "从面板中隐藏会话";
+
+/* 任务 */
+"tasks.title" = "任务";
+"tasks.stats" = "（%lld 已完成，%lld 进行中，%lld 待处理）";
+"tasks.hiddenCompleted" = "… +%lld 已完成";
+
+/* 内容（Header） */
+"content.session" = "个会话";
+"content.sessions" = "个会话";
+"content.sessionCount.one" = "%lld 个会话";
+"content.sessionCount.other" = "%lld 个会话";
+
+/* 内测过期 */
+"beta.expiredTitle" = "内测版本已过期";
+"beta.expiredMessage" = "此内测版本已于 %@ 过期。\n\n点击「检查更新」获取最新版本。";
+"beta.checkUpdate" = "检查更新";
+"beta.quit" = "退出 My Island";
+
+/* 许可证 */
+"menu.license" = "许可证";
+"payment.trouble.hint" = "付款遇到问题？点击联系支持";
+"license.trial" = "试用";
+"license.trialDays" = "试用中（剩余 %lld 天）";
+"license.trialEnded" = "试用已结束";
+"license.issue" = "许可证异常";
+"license.expired" = "已过期";
+"license.licensed" = "已激活";
+"license.activateTitle" = "激活 My Island";
+"license.activateDesc" = "输入购买确认邮件中的许可证密钥：";
+"license.activeTitle" = "许可证已激活";
+"license.activeDesc" = "感谢你支持 My Island！";
+"license.getLicense" = "获取许可证...";
+"license.activate" = "激活";
+"license.unlockFullControl" = "解锁完整控制";
+"license.unlockDetail" = "解锁跳转、审批与快捷键";
+"license.unlockDetailWithSessions" = "解锁跳转、审批、快捷键，外加 +%lld 个会话";
+"license.lockedSessionsSummary" = "+%lld 个额外会话需许可证解锁";
+"license.deactivate" = "注销许可证";
+"license.buyButton" = "购买许可证 — $19.99";
+"license.keyPlaceholder" = "输入许可证密钥";
+"license.activating" = "激活中...";
+"license.error.invalidKey" = "无效的许可证密钥";
+"license.error.network" = "网络错误，请重试";
+"license.error.wrongProduct" = "此密钥对应的是其他产品";
+"license.error.activationLimit" = "激活数量已达上限，请先在其他设备上注销";
+"license.error.disabled" = "此许可证密钥已被禁用";
+"license.expiredBanner" = "试用已过期";
+"license.expiredBannerSub" = "激活许可证以继续使用";
+
+/* Edition 彩蛋 — 品牌标识保留英文 */
+"edition.title.founder" = "FOUNDER";
+"edition.title.pioneer" = "PIONEER";
+"edition.title.explorer" = "EXPLORER";
+"edition.title.voyager" = "VOYAGER";
+"edition.title.islander" = "ISLANDER";
+
+/* 设置 - 行为 */
+"settings.autoCollapseOnLeave" = "鼠标离开时自动收起";
+
+/* 设置 - 显示 */
+"settings.display" = "显示";
+"settings.contentFontSize" = "内容字体大小";
+"settings.maxPanelHeight" = "最大面板高度";
+"settings.completionHeight" = "完成卡片高度";
+"settings.showAgentDetail" = "显示代理活动详情";
+
+/* 通行证 */
+"pass.copyImage" = "复制图片";
+"pass.saveImage" = "保存图片";
+
+/* 会话状态 */
+"status.waitingForInput" = "等待输入";
+"status.processing" = "处理中";
+"status.thinking" = "思考中";
+"status.runningTool" = "执行工具";
+"status.waitingForApproval" = "等待审批";
+"status.question" = "等待回答";
+"status.compacting" = "压缩中";
+"status.ended" = "已结束";
+"status.notification" = "通知";
+"status.unknown" = "未知";
+
+/* 工具显示 */
+"tool.thinkingEllipsis" = "思考中...";
+"tool.thinkingDetail" = "思考中：%@";
+"tool.workingEllipsis" = "工作中...";
+"tool.allowPrefix" = "允许 %@";
+"tool.runningSkill" = "运行技能";
+"tool.editing" = "编辑中";
+"tool.reading" = "读取中";
+"tool.writing" = "写入中";
+"tool.running" = "运行中";
+"tool.searching" = "搜索中";
+"tool.finding" = "查找中";
+"tool.tasking" = "任务中";
+"tool.fetching" = "获取中";
+
+/* Update */
+"update.checking" = "正在检查更新...";
+"update.install" = "安装";
+"update.installRelaunch" = "安装并重启";
+"update.remindLater" = "稍后提醒...";
+"update.downloading" = "正在下载...";
+"update.extracting" = "正在准备更新...";
+"update.installing" = "正在安装...";
+"update.upToDate" = "已是最新版本!";
+"update.upToDateDesc" = "My Island %@ 是最新版本。";
+"update.error" = "更新错误";
+
+/* 设置：声音与高级 */
+"settings.sound" = "声音";
+"settings.advanced" = "高级";
+
+/* 设置：快捷键 */
+"settings.globalShortcuts" = "全局快捷键";
+"settings.togglePanel" = "切换面板";
+"settings.togglePanelDesc" = "随处呼出，↑↓ 导航，Enter 跳转";
+"settings.recordShortcut" = "录制快捷键";
+"settings.panelShortcuts" = "面板快捷键";
+"settings.shortcut.approve" = "批准";
+"settings.shortcut.deny" = "拒绝";
+"settings.shortcut.alwaysAllow" = "始终允许";
+"settings.shortcut.bypass" = "自动批准权限";
+"settings.shortcut.terminal" = "跳转到终端";
+"settings.shortcut.selectOption" = "选择选项";
+"settings.shortcut.submitMulti" = "提交多选";
+"settings.shortcut.navigate" = "切换会话";
+"settings.shortcut.collapse" = "收起面板";
+"settings.shortcut.footer" = "面板展开时生效。按住修饰键可在按钮上显示快捷键提示。";
+
+/* 设置：侧边栏 */
+"settings.general" = "通用";
+"settings.shortcuts" = "快捷键";
+"settings.labs" = "实验室";
+"settings.pass" = "通行证";
+"settings.about" = "关于";
+
+/* 设置：区段标题与选项 */
+"settings.behaviour" = "行为";
+"settings.version" = "版本";
+"settings.experiments" = "实验功能";
+"settings.noExperiments" = "暂无可用的实验功能";
+"settings.hideInFullscreen" = "全屏时隐藏";
+"settings.smartSuppression" = "智能抑制";
+"settings.smartSuppression.help" = "Agent 所在终端标签页在前台时不自动展开面板";
+
+/* 许可证：网络错误提示 */
+"license.error.timeout" = "连接超时 — 请检查网络后重试";
+"license.error.noInternet" = "无网络连接";
+"license.error.server" = "服务器错误，请稍后重试";
+"license.error.tls" = "安全连接失败 — 请尝试关闭代理/VPN 或切换网络";
+"license.verifying" = "正在校验许可证...";
+"license.startingTrial" = "正在启动试用...";
+"license.connectToStartTrial" = "联网一次即可开始试用";
+
+/* 设置：CLI Hooks / IDE 扩展 */
+"settings.cliHooks.footer" = "启动时自动配置 Hooks。可通过开关控制各 CLI 的自动配置。";
+"settings.ideExtensions" = "IDE 扩展";
+"settings.ideExtensions.footer" = "安装扩展以精确跳转到 IDE 中的终端标签页。";
+"settings.antigravity.subtitle" = "仅终端内 Agent · 原生 Agent 即将支持";
+"settings.status.installed" = "已安装";
+"settings.status.cliNotFound" = "未检测到 CLI";
+"settings.status.active" = "已激活";
+"settings.status.notInstalled" = "未安装";
+
+/* 设置：自动隐藏 */
+"settings.autoHideWhenIdle" = "无活跃会话时自动隐藏";
+
+/* 设置：按钮 */
+"settings.install" = "安装";
+"settings.uninstall" = "卸载";
+"settings.repair" = "修复";
+"settings.retry" = "重试";
+"settings.cancel" = "取消";
+"settings.add" = "添加";
+
+/* 设置：自定义 Claude Code 路径 */
+"settings.addClaudeFork" = "添加 Claude Code 分支…";
+"settings.customPath.placeholder" = "~/.xxx/engine/cc";
+"settings.customPath.help" = "输入 Claude Code 分支版本的配置目录（需包含或将自动创建 settings.json）";
+"settings.customPath.invalid" = "目录不存在";
+"settings.customPath.duplicate" = "该路径已配置";
+"settings.customPath.remove" = "移除此自定义路径";
+
+/* 设置：Display 区段标题 */
+"settings.display.system" = "系统";
+"settings.display.notch" = "刘海";
+"settings.display.panel" = "面板";
+"settings.picker.default" = "（默认）";
+"settings.priceLocked" = "专属价格已锁定 %@ · 点击购买";
+
+/* 设置：通行证 */
+"settings.pass.placeholder" = "购买后解锁你的专属卡片";
+
+/* 设置：关于 */
+"settings.website" = "官网";
+"settings.joinCommunity" = "加入社区";
+"settings.reportBug" = "报告 Bug";
+"settings.sendFeedback" = "发送反馈";
+"settings.acknowledgements" = "致谢";
+"settings.slider.default" = "· 默认";
+"settings.slider.reset" = "恢复默认";
+
+/* 微信社群弹窗 */
+"wechat.community.title" = "👾 My Island 社区";
+"wechat.scanToJoin" = "微信扫码加入";
+"wechat.close" = "关闭";
+
+/* 声音设置 */
+"sound.enable" = "启用音效";
+"sound.volume" = "音量";
+"sound.section.session" = "会话";
+"sound.section.interactions" = "交互";
+"sound.section.system" = "系统";
+"sound.section.filters" = "过滤";
+"sound.autoDetectProbes" = "自动检测探测会话";
+"sound.autoDetectProbes.help" = "自动静音健康检查会话（如 CodexBar ClaudeProbe）";
+"sound.preview" = "试听";
+
+/* 声音类别 */
+"sound.cat.sessionStart" = "会话开始";
+"sound.cat.taskAcknowledge" = "任务确认";
+"sound.cat.taskComplete" = "任务完成";
+"sound.cat.taskError" = "任务错误";
+"sound.cat.inputRequired" = "需要审批";
+"sound.cat.resourceLimit" = "上下文限制";
+"sound.cat.userSpam" = "连续提交检测";
+
+/* 声音类别描述 */
+"sound.desc.sessionStart" = "新的 Claude / Codex / Gemini 会话";
+"sound.desc.taskAcknowledge" = "你发送了一条消息";
+"sound.desc.taskComplete" = "AI 完成了本轮回复";
+"sound.desc.taskError" = "工具失败或 API 错误";
+"sound.desc.inputRequired" = "等待权限审批或回答问题";
+"sound.desc.resourceLimit" = "上下文窗口压缩中";
+"sound.desc.userSpam" = "10 秒内发送了 3+ 条消息";
+
+/* Hook 文件监听 */
+"hookWatcher.restored" = "Hooks 已恢复 — 你的 CLI hooks 被其他工具修改了。";
+"hookWatcher.rateLimited" = "Hooks 被反复移除，请打开设置 → 通用 → CLI Hooks 管理。";
+
+/* 用量 */
+"usage.activate" = "显示用量";
+"usage.activate.tip" = "点击查看用量";
+"usage.activate.loading" = "正在加载用量数据...";
+"settings.showUsage" = "显示用量";
+"settings.showUsageHelp" = "在刘海面板顶部显示 API 用量数据";
+"settings.usageValueMode" = "显示数值";
+"settings.usageValueMode.used" = "已用量";
+"settings.usageValueMode.remaining" = "剩余量";

@@ -44,6 +44,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             HookInstaller.installIfNeeded(target: target)
         }
 
+        // Prompt for accessibility permission if not granted
+        if !AXIsProcessTrusted() {
+            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+            AXIsProcessTrustedWithOptions(options)
+        }
+
         // Start voice input if enabled in settings
         if VoiceInputCoordinator.shared.isEnabled {
             VoiceInputCoordinator.shared.start()
@@ -53,6 +59,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         windowManager = WindowManager()
         _ = windowManager?.setupNotchWindow()
+        windowManager?.startMouseScreenMonitoring()
 
         screenObserver = ScreenObserver { [weak self] in
             self?.handleScreenChange()
