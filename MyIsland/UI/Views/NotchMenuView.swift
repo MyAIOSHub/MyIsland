@@ -82,6 +82,15 @@ struct NotchMenuView: View {
                 }
             }
 
+            MenuRow(
+                icon: "doc.on.clipboard",
+                label: String(localized: "clipboard.title")
+            ) {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    viewModel.contentType = .clipboardHistory
+                }
+            }
+
             // Browser activity
             MenuRow(
                 icon: "globe",

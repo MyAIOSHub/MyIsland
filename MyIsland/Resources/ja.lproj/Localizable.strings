@@ -110,6 +110,25 @@
 "session.emptyFirstInstallHint" = "コーディングを始めると点灯します";
 "session.hideFromPanel" = "パネルからセッションを非表示";
 
+/* クリップボード */
+"clipboard.title" = "クリップボード履歴";
+"clipboard.subtitle" = "コピーしたテキスト、画像、Finder ファイルを自動で保存します。";
+"clipboard.clearAll" = "すべて消去";
+"clipboard.emptyTitle" = "クリップボード履歴はまだありません";
+"clipboard.emptyHint" = "Mac 上でテキスト、画像、ファイルをコピーすると、ここに自動保存されます。";
+"clipboard.recentTitle" = "最近のクリップボード";
+"clipboard.viewAll" = "すべて表示";
+"clipboard.action.restore" = "クリップボードに戻す";
+"clipboard.action.pasteNow" = "今すぐ貼り付け";
+"clipboard.action.delete" = "削除";
+"clipboard.kind.text" = "テキスト";
+"clipboard.kind.image" = "画像";
+"clipboard.kind.files" = "ファイル";
+"clipboard.files.count" = "%lld 個のファイル";
+"clipboard.image.body" = "画像スナップショットを My Island に保存しました";
+"notch.launcher.sessions" = "Vibe Coding パネルを開く";
+"notch.launcher.clipboard" = "クリップボード履歴を開く";
+
 /* タスク */
 "tasks.title" = "タスク";
 "tasks.stats" = "（%lld 完了、%lld 進行中、%lld 未着手）";

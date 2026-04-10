@@ -110,6 +110,25 @@
 "session.emptyFirstInstallHint" = "开始写代码，岛屿自动点亮";
 "session.hideFromPanel" = "从面板中隐藏会话";
 
+/* 剪切板 */
+"clipboard.title" = "剪切板历史";
+"clipboard.subtitle" = "自动备份全局复制的文字、图片和 Finder 文件。";
+"clipboard.clearAll" = "清空";
+"clipboard.emptyTitle" = "还没有剪切板历史";
+"clipboard.emptyHint" = "在 Mac 上复制文字、图片或文件后，它们会自动出现在这里。";
+"clipboard.recentTitle" = "最近剪切板";
+"clipboard.viewAll" = "查看全部";
+"clipboard.action.restore" = "恢复到剪切板";
+"clipboard.action.pasteNow" = "立即粘贴";
+"clipboard.action.delete" = "删除";
+"clipboard.kind.text" = "文字";
+"clipboard.kind.image" = "图片";
+"clipboard.kind.files" = "文件";
+"clipboard.files.count" = "%lld 个文件";
+"clipboard.image.body" = "图片快照已保存到 My Island";
+"notch.launcher.sessions" = "打开 Vibe Coding 窗口";
+"notch.launcher.clipboard" = "打开剪切板历史";
+
 /* 任务 */
 "tasks.title" = "任务";
 "tasks.stats" = "（%lld 已完成，%lld 进行中，%lld 待处理）";

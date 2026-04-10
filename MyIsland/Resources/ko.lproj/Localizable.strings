@@ -110,6 +110,25 @@
 "session.emptyFirstInstallHint" = "코딩을 시작하면 불이 켜집니다";
 "session.hideFromPanel" = "패널에서 세션 숨기기";
 
+/* 클립보드 */
+"clipboard.title" = "클립보드 기록";
+"clipboard.subtitle" = "복사한 텍스트, 이미지, Finder 파일을 자동으로 백업합니다.";
+"clipboard.clearAll" = "모두 지우기";
+"clipboard.emptyTitle" = "아직 클립보드 기록이 없습니다";
+"clipboard.emptyHint" = "Mac 어디서든 텍스트, 이미지, 파일을 복사하면 여기에 자동 저장됩니다.";
+"clipboard.recentTitle" = "최근 클립보드";
+"clipboard.viewAll" = "전체 보기";
+"clipboard.action.restore" = "클립보드로 복원";
+"clipboard.action.pasteNow" = "즉시 붙여넣기";
+"clipboard.action.delete" = "삭제";
+"clipboard.kind.text" = "텍스트";
+"clipboard.kind.image" = "이미지";
+"clipboard.kind.files" = "파일";
+"clipboard.files.count" = "%lld개 파일";
+"clipboard.image.body" = "이미지 스냅샷이 My Island에 저장되었습니다";
+"notch.launcher.sessions" = "Vibe Coding 패널 열기";
+"notch.launcher.clipboard" = "클립보드 기록 열기";
+
 /* 작업 */
 "tasks.title" = "작업";
 "tasks.stats" = "(%lld 완료, %lld 진행 중, %lld 대기)";

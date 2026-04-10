@@ -22,6 +22,7 @@ struct NotchView: View {
     @ObservedObject private var updateManager = UpdateManager.shared
     @ObservedObject private var petGacha = PetGachaSystem.shared
     @ObservedObject private var voiceCoordinator = VoiceInputCoordinator.shared
+    @ObservedObject private var clipboardHistory = ClipboardHistoryManager.shared
     @State private var previousPendingIds: Set<String> = []
     @State private var previousWaitingForInputIds: Set<String> = []
     @State private var waitingForInputTimestamps: [String: Date] = [:]  // sessionId -> when it entered waitingForInput
@@ -211,8 +212,11 @@ struct NotchView: View {
         .preferredColorScheme(.dark)
         .onAppear {
             sessionMonitor.startMonitoring()
-            viewModel.onPetIconTapped = { [weak petGacha] in
-                petGacha?.randomizeActivePet()
+            viewModel.onPetIconTapped = { [weak viewModel] in
+                viewModel?.showInstances()
+            }
+            viewModel.onClipboardIconTapped = { [weak viewModel] in
+                viewModel?.showClipboardHistory()
             }
             // On non-notched devices, keep visible so users have a target to interact with
             if !viewModel.hasPhysicalNotch {
@@ -227,20 +231,12 @@ struct NotchView: View {
         }
         .onChange(of: sessionMonitor.instances) { _, instances in
             viewModel.sessionCount = instances.count
-            // Calculate extra height for interactive content (AskUserQuestion options, etc.)
-            var extraHeight: CGFloat = 0
-            for session in instances {
-                if let questions = session.pendingQuestions, !questions.isEmpty {
-                    for q in questions {
-                        extraHeight += 30  // question text
-                        extraHeight += CGFloat(q.options.count) * 44  // option cards
-                        extraHeight += 36  // jump button + spacing
-                    }
-                }
-            }
-            viewModel.interactiveContentHeight = extraHeight
+            updateInstancesExtraHeight(instances)
             handleProcessingChange()
             handleWaitingForInputChange(instances)
+        }
+        .onChange(of: clipboardHistory.entries) { _, _ in
+            updateInstancesExtraHeight(sessionMonitor.instances)
         }
         .onReceive(NotificationCenter.default.publisher(for: .updateAvailableNotification)) { _ in
             if viewModel.status == .closed {
@@ -366,20 +362,11 @@ struct NotchView: View {
         HStack(spacing: 0) {
             // Left side - always show pet/crab icon
             HStack(spacing: 4) {
-                notchIcon(size: 14, animateLegs: isProcessing)
-                    .id(petGacha.activePet?.id)
-                    .background(
-                        GeometryReader { geo in
-                            Color.clear
-                                .onAppear {
-                                    updatePetIconRect(geo)
-                                }
-                                .onChange(of: geo.frame(in: .global)) { _ in
-                                    updatePetIconRect(geo)
-                                }
-                        }
-                    )
-                    .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
+                petLauncherIcon(isOpened: viewModel.status == .opened)
+
+                if viewModel.status == .opened {
+                    clipboardLauncherIcon()
+                }
 
                 // Permission indicator only (amber)
                 if hasPendingPermission {
@@ -505,14 +492,6 @@ struct NotchView: View {
     @ViewBuilder
     private var openedHeaderContent: some View {
         HStack(spacing: 12) {
-            // Show static crab only if not showing activity in headerRow
-            // (headerRow handles crab + indicator when showClosedActivity is true)
-            if !showClosedActivity {
-                notchIcon(size: 14, animateLegs: false)
-                    .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: !showClosedActivity)
-                    .padding(.leading, 8)
-            }
-
             Spacer()
 
             // Menu toggle
@@ -555,6 +534,8 @@ struct NotchView: View {
                     sessionMonitor: sessionMonitor,
                     viewModel: viewModel
                 )
+            case .clipboardHistory:
+                ClipboardHistoryView(viewModel: viewModel)
             case .menu:
                 NotchMenuView(viewModel: viewModel)
             case .soundSettings:
@@ -578,6 +559,66 @@ struct NotchView: View {
         }
         .frame(width: notchSize.width - 24) // Fixed width to prevent text reflow
         // Removed .id() - was causing view recreation and performance issues
+    }
+
+    @ViewBuilder
+    private func petLauncherIcon(isOpened: Bool) -> some View {
+        let icon = notchIcon(size: 14, animateLegs: isProcessing)
+            .id(petGacha.activePet?.id)
+            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
+
+        if isOpened {
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                    viewModel.showInstances()
+                }
+            } label: {
+                icon
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(.plain)
+            .help(NSLocalizedString("notch.launcher.sessions", comment: ""))
+        } else {
+            icon
+                .frame(width: 18, height: 18)
+                .background(
+                    GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    updatePetIconRect(geo)
+                                }
+                                .onChange(of: geo.frame(in: .global)) { _, _ in
+                                    updatePetIconRect(geo)
+                                }
+                    }
+                )
+        }
+    }
+
+    @ViewBuilder
+    private func clipboardLauncherIcon() -> some View {
+        let icon = ZStack {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(DesignTokens.Surface.base)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(DesignTokens.Border.subtle, lineWidth: 1)
+                )
+            Image(systemName: "doc.on.clipboard")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.white.opacity(0.82))
+        }
+        .frame(width: 18, height: 18)
+
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                viewModel.showClipboardHistory()
+            }
+        } label: {
+            icon
+        }
+        .buttonStyle(.plain)
+        .help(NSLocalizedString("notch.launcher.clipboard", comment: ""))
     }
 
     // MARK: - Notch Icon (pet or crab)
@@ -618,6 +659,25 @@ struct NotchView: View {
     }
 
     // MARK: - Event Handlers
+
+    private func updateInstancesExtraHeight(_ instances: [SessionState]) {
+        var extraHeight: CGFloat = 0
+        for session in instances {
+            if let questions = session.pendingQuestions, !questions.isEmpty {
+                for q in questions {
+                    extraHeight += 30
+                    extraHeight += CGFloat(q.options.count) * 44
+                    extraHeight += 36
+                }
+            }
+        }
+
+        if !clipboardHistory.entries.isEmpty {
+            extraHeight += 152
+        }
+
+        viewModel.interactiveContentHeight = extraHeight
+    }
 
     private func handleProcessingChange() {
         if isAnyProcessing || hasPendingPermission {
@@ -696,7 +756,7 @@ struct NotchView: View {
                     let shouldPlaySound = await shouldPlayNotificationSound(for: newlyWaitingSessions)
                     if shouldPlaySound {
                         await MainActor.run {
-                            NSSound(named: soundName)?.play()
+                            _ = NSSound(named: soundName)?.play()
                         }
                     }
                 }

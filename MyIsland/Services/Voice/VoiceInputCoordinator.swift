@@ -382,48 +382,12 @@ final class VoiceInputCoordinator: ObservableObject {
             return
         }
 
-        // Save current clipboard content
-        let pasteboard = NSPasteboard.general
-        let previousContents = pasteboard.string(forType: .string)
-
-        // Set transcribed text to clipboard
-        pasteboard.clearContents()
-        pasteboard.setString(text, forType: .string)
-        logger.info("[Voice] Clipboard set, text length: \(text.count)")
-
-        // Restore focus to the original app
         if let app {
-            let activated = app.activate(options: .activateIgnoringOtherApps)
             let name = app.localizedName ?? "unknown"
-            logger.info("[Voice] Activated app '\(name, privacy: .public)': \(activated)")
-            // Give the app time to gain focus
-            usleep(200_000) // 200ms
-        } else {
-            logger.warning("[Voice] No target app to activate")
+            logger.info("[Voice] Target app for paste: '\(name, privacy: .public)'")
         }
-
-        // Simulate Cmd+V paste
-        guard let source = CGEventSource(stateID: .hidSystemState) else {
-            logger.error("[Voice] Failed to create CGEventSource")
-            return
-        }
-        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true),
-              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false) else {
-            logger.error("[Voice] Failed to create CGEvent for Cmd+V")
-            return
-        }
-        keyDown.flags = .maskCommand
-        keyDown.post(tap: .cghidEventTap)
-        keyUp.flags = .maskCommand
-        keyUp.post(tap: .cghidEventTap)
-        logger.info("[Voice] Cmd+V paste event posted")
-
-        // Restore previous clipboard after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let previous = previousContents {
-                pasteboard.clearContents()
-                pasteboard.setString(previous, forType: .string)
-            }
+        Task {
+            await ClipboardPasteCoordinator.shared.pasteTextTemporarily(text, to: app)
         }
     }
 

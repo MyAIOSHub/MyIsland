@@ -11,16 +11,17 @@ import SwiftUI
 struct ClaudeInstancesView: View {
     @ObservedObject var sessionMonitor: ClaudeSessionMonitor
     @ObservedObject var viewModel: NotchViewModel
+    @ObservedObject private var clipboardHistory = ClipboardHistoryManager.shared
 
     @State private var showAll = false
 
     private static let maxVisibleSessions = 5
 
     var body: some View {
-        if sessionMonitor.instances.isEmpty {
+        if sessionMonitor.instances.isEmpty && clipboardHistory.entries.isEmpty {
             emptyState
         } else {
-            instancesList
+            contentList
         }
     }
 
@@ -72,45 +73,67 @@ struct ClaudeInstancesView: View {
         return Array(sortedInstances.prefix(Self.maxVisibleSessions))
     }
 
-    private var instancesList: some View {
+    private var contentList: some View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack(spacing: 2) {
-                ForEach(displayedInstances) { session in
-                    InstanceRow(
-                        session: session,
-                        onFocus: { focusSession(session) },
-                        onChat: { openChat(session) },
-                        onArchive: { archiveSession(session) },
-                        onApprove: { approveSession(session) },
-                        onReject: { rejectSession(session) },
-                        onSelectOption: { qIdx, oIdx in
-                            selectOption(session, questionIndex: qIdx, optionIndex: oIdx)
+                if !sessionMonitor.instances.isEmpty {
+                    ForEach(displayedInstances) { session in
+                        InstanceRow(
+                            session: session,
+                            onFocus: { focusSession(session) },
+                            onChat: { openChat(session) },
+                            onArchive: { archiveSession(session) },
+                            onApprove: { approveSession(session) },
+                            onReject: { rejectSession(session) },
+                            onSelectOption: { qIdx, oIdx in
+                                selectOption(session, questionIndex: qIdx, optionIndex: oIdx)
+                            }
+                        )
+                        .id(session.stableId)
+                    }
+
+                    if !showAll && sortedInstances.count > Self.maxVisibleSessions {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showAll = true
+                            }
+                        } label: {
+                            Text(String(format: String(localized: "session.showAll"), locale: Locale.current, Int64(sortedInstances.count)))
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundStyle(DesignTokens.Text.secondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, DesignTokens.Spacing.xs)
                         }
-                    )
-                    .id(session.stableId)
+                        .buttonStyle(.plain)
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                    }
                 }
 
-                // Show all button when there are more sessions
-                if !showAll && sortedInstances.count > Self.maxVisibleSessions {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showAll = true
-                        }
-                    } label: {
-                        Text("显示全部 \(sortedInstances.count) 个会话")
-                            .font(.system(size: 10, weight: .medium, design: .monospaced))
-                            .foregroundStyle(DesignTokens.Text.secondary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, DesignTokens.Spacing.xs)
+                if !clipboardHistory.entries.isEmpty {
+                    RecentClipboardCard(
+                        entries: clipboardHistory.recentEntries(limit: 3),
+                        onOpenHistory: { viewModel.contentType = .clipboardHistory },
+                        onRestore: { entry in clipboardHistory.restore(entryId: entry.id) },
+                        onPasteNow: { entry in clipboardHistory.pasteNow(entryId: entry.id) }
+                    )
+                    .padding(.top, sessionMonitor.instances.isEmpty ? 4 : 10)
+                    .padding(.horizontal, 2)
+                } else if sessionMonitor.instances.isEmpty {
+                    VStack(spacing: DesignTokens.Spacing.xs) {
+                        Text(String(localized: "session.emptyFirstInstall"))
+                            .font(DesignTokens.Font.heading())
+                            .foregroundColor(DesignTokens.Text.tertiary)
+                        Text(String(localized: "session.emptyFirstInstallHint"))
+                            .font(DesignTokens.Font.caption())
+                            .foregroundColor(DesignTokens.Text.quaternary)
                     }
-                    .buttonStyle(.plain)
-                    .onHover { hovering in
-                        if hovering {
-                            NSCursor.pointingHand.push()
-                        } else {
-                            NSCursor.pop()
-                        }
-                    }
+                    .padding(.top, DesignTokens.Spacing.lg)
                 }
             }
             .padding(.vertical, 4)

@@ -64,6 +64,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             VoiceInputCoordinator.shared.start()
         }
 
+        FrontmostAppTracker.shared.start()
+        ClipboardHistoryManager.shared.start()
+        ClipboardMonitor.shared.start()
+
         // Start browser event server for extension integration
         BrowserEventServer.shared.start { event in
             Task { @MainActor in
@@ -105,6 +109,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     func applicationWillTerminate(_ notification: Notification) {
         updateCheckTimer?.invalidate()
         screenObserver = nil
+        ClipboardMonitor.shared.stop()
+        FrontmostAppTracker.shared.stop()
     }
 
     private func ensureSingleInstance() -> Bool {

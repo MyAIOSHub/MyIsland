@@ -110,6 +110,25 @@
 "session.emptyFirstInstallHint" = "Start coding to light it up";
 "session.hideFromPanel" = "Hide session from panel";
 
+/* Clipboard */
+"clipboard.title" = "Clipboard History";
+"clipboard.subtitle" = "Backed up text, images, and Finder file copies.";
+"clipboard.clearAll" = "Clear All";
+"clipboard.emptyTitle" = "No clipboard history yet";
+"clipboard.emptyHint" = "Copy text, images, or files anywhere on your Mac and they will show up here.";
+"clipboard.recentTitle" = "Recent Clipboard";
+"clipboard.viewAll" = "View All";
+"clipboard.action.restore" = "Restore to Clipboard";
+"clipboard.action.pasteNow" = "Paste Now";
+"clipboard.action.delete" = "Delete";
+"clipboard.kind.text" = "Text";
+"clipboard.kind.image" = "Image";
+"clipboard.kind.files" = "Files";
+"clipboard.files.count" = "%lld files";
+"clipboard.image.body" = "Image snapshot saved to My Island";
+"notch.launcher.sessions" = "Open Vibe Coding Panel";
+"notch.launcher.clipboard" = "Open Clipboard History";
+
 /* Tasks */
 "tasks.title" = "Tasks";
 "tasks.stats" = "(%lld done, %lld in progress, %lld open)";

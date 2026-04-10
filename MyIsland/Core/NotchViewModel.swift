@@ -28,6 +28,7 @@ enum NotchOpenReason {
 
 enum NotchContentType: Equatable {
     case instances
+    case clipboardHistory
     case menu
     case soundSettings
     case displaySettings
@@ -39,6 +40,7 @@ enum NotchContentType: Equatable {
     var id: String {
         switch self {
         case .instances: return "instances"
+        case .clipboardHistory: return "clipboardHistory"
         case .menu: return "menu"
         case .soundSettings: return "soundSettings"
         case .displaySettings: return "displaySettings"
@@ -63,8 +65,12 @@ class NotchViewModel: ObservableObject {
 
     /// Screen-coordinate rect of the pet icon, updated by NotchView via GeometryReader.
     var petIconScreenRect: CGRect = .zero
+    /// Screen-coordinate rect of the clipboard icon, updated by NotchView via GeometryReader.
+    var clipboardIconScreenRect: CGRect = .zero
     /// Called when pet icon area is tapped (closed state).
     var onPetIconTapped: (() -> Void)?
+    /// Called when clipboard icon area is tapped (closed state).
+    var onClipboardIconTapped: (() -> Void)?
 
     // MARK: - Dependencies
 
@@ -90,6 +96,11 @@ class NotchViewModel: ObservableObject {
             return CGSize(
                 width: min(screenRect.width * 0.5, max(panelW, 500)),
                 height: min(maxH, 580)
+            )
+        case .clipboardHistory:
+            return CGSize(
+                width: min(screenRect.width * 0.42, max(panelW, 520)),
+                height: min(maxH, 560)
             )
         case .menu:
             return CGSize(
@@ -225,7 +236,6 @@ class NotchViewModel: ObservableObject {
 
     private func handleMouseDown() {
         let location = NSEvent.mouseLocation
-        let inNotch = geometry.isPointInNotch(location)
 
         switch status {
         case .opened:
@@ -321,6 +331,18 @@ class NotchViewModel: ObservableObject {
 
     func toggleMenu() {
         contentType = contentType == .menu ? .instances : .menu
+    }
+
+    func showInstances() {
+        currentChatSession = nil
+        contentType = .instances
+        notchOpen(reason: .click)
+    }
+
+    func showClipboardHistory() {
+        currentChatSession = nil
+        contentType = .clipboardHistory
+        notchOpen(reason: .click)
     }
 
     func showChat(for session: SessionState) {
