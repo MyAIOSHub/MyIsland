@@ -82,6 +82,16 @@ struct NotchMenuView: View {
                 }
             }
 
+            // Browser activity
+            MenuRow(
+                icon: "globe",
+                label: "浏览器活动"
+            ) {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    viewModel.contentType = .browserActivity
+                }
+            }
+
             AccessibilityRow(isEnabled: AXIsProcessTrusted())
 
             // System settings

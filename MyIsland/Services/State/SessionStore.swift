@@ -186,26 +186,17 @@ actor SessionStore {
                 session.toolTracker.startTool(id: toolUseId, name: toolName)
 
                 // Skip creating top-level placeholder for subagent tools
-                // They'll appear under their parent Task instead
-                let isSubagentTool = session.subagentState.hasActiveSubagent && toolName != "Task"
+                // They'll appear under their parent Task/spawn_agent instead.
+                let isSubagentTool = session.subagentState.hasActiveSubagent &&
+                    !ToolCallItem.isSubagentParentToolName(toolName) &&
+                    !ToolCallItem.isSubagentControlToolName(toolName)
                 if isSubagentTool {
                     return
                 }
 
                 let toolExists = session.chatItems.contains { $0.id == toolUseId }
                 if !toolExists {
-                    var input: [String: String] = [:]
-                    if let hookInput = event.toolInput {
-                        for (key, value) in hookInput {
-                            if let str = value.value as? String {
-                                input[key] = str
-                            } else if let num = value.value as? Int {
-                                input[key] = String(num)
-                            } else if let bool = value.value as? Bool {
-                                input[key] = bool ? "true" : "false"
-                            }
-                        }
-                    }
+                    let input = flattenToolInput(event.toolInput)
 
                     let placeholderItem = ChatHistoryItem(
                         id: toolUseId,
@@ -252,24 +243,125 @@ actor SessionStore {
     private func processSubagentTracking(event: HookEvent, session: inout SessionState) {
         switch event.event {
         case "PreToolUse":
-            if event.tool == "Task", let toolUseId = event.toolUseId {
-                let description = event.toolInput?["description"]?.value as? String
+            if ToolCallItem.isSubagentParentToolName(event.tool), let toolUseId = event.toolUseId {
+                let description = ToolCallItem.subagentDescription(from: flattenToolInput(event.toolInput))
                 session.subagentState.startTask(taskToolId: toolUseId, description: description)
                 Self.logger.debug("Started Task subagent tracking: \(toolUseId.prefix(12), privacy: .public)")
+            } else if let toolUseId = event.toolUseId,
+                      let toolName = event.tool,
+                      session.subagentState.hasActiveSubagent,
+                      !ToolCallItem.isSubagentControlToolName(toolName) {
+                let subagentTool = SubagentToolCall(
+                    id: toolUseId,
+                    name: toolName,
+                    input: flattenToolInput(event.toolInput),
+                    status: .running,
+                    timestamp: Date()
+                )
+                session.subagentState.addSubagentTool(subagentTool)
+                syncMostRecentActiveTaskSubagentTools(session: &session)
             }
 
         case "PostToolUse":
-            if event.tool == "Task" {
+            if ToolCallItem.isSubagentParentToolName(event.tool) {
                 Self.logger.debug("PostToolUse for Task received (subagent still running)")
+            } else if let toolUseId = event.toolUseId,
+                      let taskToolId = activeTaskId(containingSubagentToolId: toolUseId, in: session) {
+                session.subagentState.updateSubagentToolStatus(toolId: toolUseId, status: .success)
+                syncSubagentTools(taskToolId: taskToolId, session: &session)
             }
 
         case "SubagentStop":
             // SubagentStop fires when a subagent completes - stop tracking
             // Subagent tools are populated from agent file in processFileUpdated
-            Self.logger.debug("SubagentStop received")
+            if let taskToolId = inferTaskToolIdForSubagentStop(event: event, session: session) {
+                if let agentId = event.agentId {
+                    session.subagentState.setAgentId(agentId, for: taskToolId)
+                }
+                syncSubagentTools(taskToolId: taskToolId, session: &session)
+
+                if event.agentId != nil || session.subagentState.activeTasks.count == 1 {
+                    session.subagentState.stopTask(taskToolId: taskToolId)
+                }
+            }
+
+            let agentId = event.agentId ?? "unknown"
+            let agentType = event.agentType ?? "unknown"
+            if let summary = event.lastAssistantMessage, !summary.isEmpty {
+                let preview = String(summary.prefix(120)).replacingOccurrences(of: "\n", with: " ")
+                Self.logger.debug("SubagentStop received for \(agentType, privacy: .public) \(agentId.prefix(8), privacy: .public): \(preview, privacy: .public)")
+            } else {
+                Self.logger.debug("SubagentStop received for \(agentType, privacy: .public) \(agentId.prefix(8), privacy: .public)")
+            }
 
         default:
             break
+        }
+    }
+
+    private func inferTaskToolIdForSubagentStop(event: HookEvent, session: SessionState) -> String? {
+        let candidates = session.subagentState.activeTasks.filter { _, context in
+            guard let agentId = event.agentId, !agentId.isEmpty else {
+                return true
+            }
+            return context.agentId == nil || context.agentId == agentId
+        }
+
+        return candidates.max { lhs, rhs in
+            lhs.value.startTime < rhs.value.startTime
+        }?.key
+    }
+
+    private func flattenToolInput(_ hookInput: [String: AnyCodable]?) -> [String: String] {
+        var input: [String: String] = [:]
+        if let hookInput {
+            for (key, value) in hookInput {
+                if let str = value.value as? String {
+                    input[key] = str
+                } else if let num = value.value as? Int {
+                    input[key] = String(num)
+                } else if let bool = value.value as? Bool {
+                    input[key] = bool ? "true" : "false"
+                }
+            }
+        }
+        return input
+    }
+
+    private func activeTaskId(containingSubagentToolId toolId: String, in session: SessionState) -> String? {
+        for (taskToolId, taskContext) in session.subagentState.activeTasks {
+            if taskContext.subagentTools.contains(where: { $0.id == toolId }) {
+                return taskToolId
+            }
+        }
+        return nil
+    }
+
+    private func syncMostRecentActiveTaskSubagentTools(session: inout SessionState) {
+        guard let taskToolId = session.subagentState.activeTasks.max(by: {
+            $0.value.startTime < $1.value.startTime
+        })?.key else {
+            return
+        }
+        syncSubagentTools(taskToolId: taskToolId, session: &session)
+    }
+
+    private func syncSubagentTools(taskToolId: String, session: inout SessionState) {
+        guard let tools = session.subagentState.activeTasks[taskToolId]?.subagentTools else { return }
+
+        for index in 0..<session.chatItems.count {
+            guard session.chatItems[index].id == taskToolId,
+                  case .toolCall(var tool) = session.chatItems[index].type else {
+                continue
+            }
+
+            tool.subagentTools = tools
+            session.chatItems[index] = ChatHistoryItem(
+                id: taskToolId,
+                type: .toolCall(tool),
+                timestamp: session.chatItems[index].timestamp
+            )
+            return
         }
     }
 
@@ -633,7 +725,7 @@ actor SessionStore {
         )
     }
 
-    /// Populate subagent tools for Task tools using their agent JSONL files
+    /// Populate subagent tools for Task/spawn_agent tools using their agent JSONL files
     private func populateSubagentToolsFromAgentFiles(
         session: inout SessionState,
         cwd: String,
@@ -641,7 +733,7 @@ actor SessionStore {
     ) async {
         for i in 0..<session.chatItems.count {
             guard case .toolCall(var tool) = session.chatItems[i].type,
-                  tool.name == "Task",
+                  ToolCallItem.isSubagentParentToolName(tool.name),
                   let structuredResult = structuredResults[session.chatItems[i].id],
                   case .task(let taskResult) = structuredResult,
                   !taskResult.agentId.isEmpty else { continue }
@@ -651,7 +743,7 @@ actor SessionStore {
             // Store agentId → description mapping for AgentOutputTool display
             if let description = session.subagentState.activeTasks[taskToolId]?.description {
                 session.subagentState.agentDescriptions[taskResult.agentId] = description
-            } else if let description = tool.input["description"] {
+            } else if let description = ToolCallItem.subagentDescription(from: tool.input) {
                 session.subagentState.agentDescriptions[taskResult.agentId] = description
             }
 

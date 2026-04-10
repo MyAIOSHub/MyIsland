@@ -858,9 +858,9 @@ struct ToolCallView: View {
         }
     }
 
-    /// Whether the tool can be expanded (has result, NOT Task tools, NOT Edit tools)
+    /// Whether the tool can be expanded (has result, NOT subagent parent tools, NOT Edit tools)
     private var canExpand: Bool {
-        tool.name != "Task" && tool.name != "Edit" && hasResult
+        !tool.isSubagentParentTool && tool.name != "Edit" && hasResult
     }
 
     private var showContent: Bool {
@@ -895,8 +895,8 @@ struct ToolCallView: View {
                     .foregroundColor(textColor)
                     .fixedSize()
 
-                if tool.name == "Task" && !tool.subagentTools.isEmpty {
-                    let taskDesc = tool.input["description"] ?? "Running agent..."
+                if tool.isSubagentParentTool && !tool.subagentTools.isEmpty {
+                    let taskDesc = ToolCallItem.subagentDescription(from: tool.input) ?? "Running agent..."
                     Text("\(taskDesc) (\(tool.subagentTools.count) tools)")
                         .font(.system(size: 11))
                         .foregroundColor(textColor.opacity(0.7))
@@ -941,8 +941,8 @@ struct ToolCallView: View {
                 }
             }
 
-            // Subagent tools list (for Task tools)
-            if tool.name == "Task" && !tool.subagentTools.isEmpty {
+            // Subagent tools list (for Task/spawn_agent tools)
+            if tool.isSubagentParentTool && !tool.subagentTools.isEmpty {
                 SubagentToolsList(tools: tool.subagentTools)
                     .padding(.leading, 12)
                     .padding(.top, 2)
@@ -950,7 +950,7 @@ struct ToolCallView: View {
 
             // Result content (Edit always shows, others when expanded)
             // Edit tools bypass hasResult check - fallback in ToolResultContent renders from input params
-            if showContent && tool.status != .running && tool.name != "Task" && (hasResult || tool.name == "Edit") {
+            if showContent && tool.status != .running && !tool.isSubagentParentTool && (hasResult || tool.name == "Edit") {
                 ToolResultContent(tool: tool)
                     .padding(.leading, 12)
                     .padding(.top, 4)

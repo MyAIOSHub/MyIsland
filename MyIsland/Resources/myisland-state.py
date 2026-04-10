@@ -73,6 +73,14 @@ def send_event(state):
         return None
 
 
+def copy_optional_fields(src, dst, field_names):
+    """Copy non-empty optional fields from hook payload into socket payload."""
+    for field_name in field_names:
+        value = src.get(field_name)
+        if value is not None and value != "":
+            dst[field_name] = value
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -120,6 +128,16 @@ def main():
         "tty": tty,
         "source": _source,
     }
+    copy_optional_fields(
+        data,
+        state,
+        [
+            "message",
+            "agent_id",
+            "agent_type",
+            "last_assistant_message",
+        ]
+    )
 
     # Map events to status
     if event == "UserPromptSubmit":
@@ -198,7 +216,6 @@ def main():
         else:
             state["status"] = "notification"
         state["notification_type"] = notification_type
-        state["message"] = data.get("message")
 
     elif event == "Stop":
         state["status"] = "waiting_for_input"

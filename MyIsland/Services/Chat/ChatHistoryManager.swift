@@ -89,7 +89,7 @@ class ChatHistoryManager: ObservableObject {
     private func filterOutSubagentTools(_ items: [ChatHistoryItem]) -> [ChatHistoryItem] {
         var subagentToolIds = Set<String>()
         for item in items {
-            if case .toolCall(let tool) = item.type, tool.name == "Task" {
+            if case .toolCall(let tool) = item.type, tool.isSubagentParentTool {
                 for subagentTool in tool.subagentTools {
                     subagentToolIds.insert(subagentTool.id)
                 }
@@ -127,11 +127,45 @@ struct ToolCallItem: Equatable, Sendable {
     var result: String?
     var structuredResult: ToolResultData?
 
-    /// For Task tools: nested subagent tool calls
+    /// For Task/spawn_agent tools: nested subagent tool calls
     var subagentTools: [SubagentToolCall]
+
+    nonisolated static func isSubagentParentToolName(_ toolName: String?) -> Bool {
+        toolName == "Task" || toolName == "spawn_agent"
+    }
+
+    nonisolated static func isSubagentControlToolName(_ toolName: String?) -> Bool {
+        toolName == "wait_agent" ||
+        toolName == "send_input" ||
+        toolName == "resume_agent" ||
+        toolName == "close_agent"
+    }
+
+    nonisolated static func subagentDescription(from input: [String: String]) -> String? {
+        for key in ["description", "message", "name"] {
+            if let value = input[key]?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !value.isEmpty {
+                return value
+            }
+        }
+
+        if let agentType = input["agent_type"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !agentType.isEmpty {
+            return agentType.replacingOccurrences(of: "_", with: " ")
+        }
+
+        return nil
+    }
+
+    var isSubagentParentTool: Bool {
+        Self.isSubagentParentToolName(name)
+    }
 
     /// Preview text for the tool (input-based)
     var inputPreview: String {
+        if isSubagentParentTool, let description = Self.subagentDescription(from: input) {
+            return description
+        }
         if let filePath = input["file_path"] ?? input["path"] {
             return URL(fileURLWithPath: filePath).lastPathComponent
         }
@@ -147,6 +181,9 @@ struct ToolCallItem: Equatable, Sendable {
         }
         if let url = input["url"] {
             return url
+        }
+        if let target = input["target"] {
+            return "Agent \(target.prefix(8))"
         }
         if let agentId = input["agentId"] {
             let blocking = input["block"] == "true"

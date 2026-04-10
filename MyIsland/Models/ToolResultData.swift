@@ -289,8 +289,8 @@ struct ToolStatusDisplay {
             return ToolStatusDisplay(text: "Searching...", isRunning: true)
         case "WebFetch":
             return ToolStatusDisplay(text: "Fetching...", isRunning: true)
-        case "Task":
-            if let desc = input["description"], !desc.isEmpty {
+        case "Task", "spawn_agent":
+            if let desc = ToolCallItem.subagentDescription(from: input) {
                 return ToolStatusDisplay(text: desc, isRunning: true)
             }
             return ToolStatusDisplay(text: "Running agent...", isRunning: true)

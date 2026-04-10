@@ -40,6 +40,8 @@ enum AppSettings {
         static let notificationSound = "notificationSound"
         static let autoExpandNotch = "autoExpandNotch"
         static let verboseMode = "verboseMode"
+        static let browserRetentionMinutes = "browserRetentionMinutes"
+        static let browserHeartbeatSeconds = "browserHeartbeatSeconds"
     }
 
     // MARK: - Notch Behavior
@@ -54,6 +56,20 @@ enum AppSettings {
     static var verboseMode: Bool {
         get { defaults.object(forKey: Keys.verboseMode) as? Bool ?? false }
         set { defaults.set(newValue, forKey: Keys.verboseMode) }
+    }
+
+    // MARK: - Browser Activity
+
+    /// How long completed tasks/conversations stay in the list (minutes, default: 30)
+    static var browserRetentionMinutes: Int {
+        get { defaults.object(forKey: Keys.browserRetentionMinutes) as? Int ?? 30 }
+        set { defaults.set(newValue, forKey: Keys.browserRetentionMinutes) }
+    }
+
+    /// Extension heartbeat poll interval (seconds, default: 5)
+    static var browserHeartbeatSeconds: Int {
+        get { defaults.object(forKey: Keys.browserHeartbeatSeconds) as? Int ?? 5 }
+        set { defaults.set(newValue, forKey: Keys.browserHeartbeatSeconds) }
     }
 
     // MARK: - Notification Sound

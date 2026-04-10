@@ -24,10 +24,28 @@ actor ConversationParser {
     /// Logger for conversation parser (nonisolated static for cross-context access)
     nonisolated static let logger = Logger(subsystem: "com.myisland", category: "Parser")
 
+    private enum SessionLogFormat {
+        case claude
+        case codex
+    }
+
+    private struct ResolvedSessionFile {
+        let path: String
+        let format: SessionLogFormat
+    }
+
+    private struct CodexSessionIndexEntry {
+        let threadName: String?
+        let updatedAt: Date?
+    }
+
     /// Cache of parsed conversation info, keyed by session file path
     private var cache: [String: CachedInfo] = [:]
 
     private var incrementalState: [String: IncrementalParseState] = [:]
+    private var codexSessionPathCache: [String: String] = [:]
+    private var codexIndexCache: [String: CodexSessionIndexEntry] = [:]
+    private var codexIndexModDate: Date?
 
     private struct CachedInfo {
         let modificationDate: Date
@@ -45,7 +63,21 @@ actor ConversationParser {
         var structuredResults: [String: ToolResultData] = [:]  // Structured results keyed by tool_use_id
         var lastClearOffset: UInt64 = 0  // Offset of last /clear command (0 = none or at start)
         var clearPending: Bool = false  // True if a /clear was just detected
+        var filePath: String?
+        var format: SessionLogFormat?
     }
+
+    private static let iso8601FractionalFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
 
     /// Parsed tool result data
     struct ToolResult {
@@ -72,8 +104,19 @@ actor ConversationParser {
     /// Parse a JSONL file to extract conversation info
     /// Uses caching based on file modification time
     func parse(sessionId: String, cwd: String) -> ConversationInfo {
-        let projectDir = cwd.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ".", with: "-")
-        let sessionFile = NSHomeDirectory() + "/.claude/projects/" + projectDir + "/" + sessionId + ".jsonl"
+        guard let resolved = resolveSessionFile(sessionId: sessionId, cwd: cwd) else {
+            let summary = codexSessionIndexEntry(for: sessionId)?.threadName
+            return ConversationInfo(
+                summary: summary,
+                lastMessage: nil,
+                lastMessageRole: nil,
+                lastToolName: nil,
+                firstUserMessage: nil,
+                lastUserMessageDate: nil
+            )
+        }
+
+        let sessionFile = resolved.path
 
         let fileManager = FileManager.default
         guard fileManager.fileExists(atPath: sessionFile),
@@ -91,14 +134,23 @@ actor ConversationParser {
             return ConversationInfo(summary: nil, lastMessage: nil, lastMessageRole: nil, lastToolName: nil, firstUserMessage: nil, lastUserMessageDate: nil)
         }
 
-        let info = parseContent(content)
+        let info = parseContent(content, sessionId: sessionId, format: resolved.format)
         cache[sessionFile] = CachedInfo(modificationDate: modDate, info: info)
 
         return info
     }
 
     /// Parse JSONL content
-    private func parseContent(_ content: String) -> ConversationInfo {
+    private func parseContent(_ content: String, sessionId: String, format: SessionLogFormat) -> ConversationInfo {
+        switch format {
+        case .claude:
+            return parseClaudeContent(content)
+        case .codex:
+            return parseCodexContent(content, sessionId: sessionId)
+        }
+    }
+
+    private func parseClaudeContent(_ content: String) -> ConversationInfo {
         let lines = content.components(separatedBy: "\n").filter { !$0.isEmpty }
 
         var summary: String?
@@ -205,6 +257,77 @@ actor ConversationParser {
         )
     }
 
+    private func parseCodexContent(_ content: String, sessionId: String) -> ConversationInfo {
+        let lines = content.components(separatedBy: "\n").filter { !$0.isEmpty }
+
+        let summary = codexSessionIndexEntry(for: sessionId)?.threadName
+        var firstUserMessage: String?
+        var lastMessage: String?
+        var lastMessageRole: String?
+        var lastUserMessageDate: Date?
+
+        for line in lines {
+            guard let lineData = line.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
+                  let type = json["type"] as? String else {
+                continue
+            }
+
+            if type == "event_msg",
+               let payload = json["payload"] as? [String: Any],
+               payload["type"] as? String == "user_message",
+               let message = Self.normalizedText(payload["message"] as? String) {
+                firstUserMessage = Self.truncateMessage(message, maxLength: 50)
+                break
+            }
+        }
+
+        for line in lines.reversed() {
+            guard let lineData = line.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
+                  let type = json["type"] as? String else {
+                continue
+            }
+
+            if lastMessage == nil {
+                if type == "response_item",
+                   let payload = json["payload"] as? [String: Any],
+                   payload["type"] as? String == "message",
+                   payload["role"] as? String == "assistant",
+                   let message = Self.codexAssistantMessageText(payload) {
+                    lastMessage = message
+                    lastMessageRole = "assistant"
+                } else if type == "event_msg",
+                          let payload = json["payload"] as? [String: Any],
+                          payload["type"] as? String == "user_message",
+                          let message = Self.normalizedText(payload["message"] as? String) {
+                    lastMessage = message
+                    lastMessageRole = "user"
+                }
+            }
+
+            if lastUserMessageDate == nil,
+               type == "event_msg",
+               let payload = json["payload"] as? [String: Any],
+               payload["type"] as? String == "user_message" {
+                lastUserMessageDate = Self.parseDate(json["timestamp"] as? String)
+            }
+
+            if lastMessage != nil && lastUserMessageDate != nil {
+                break
+            }
+        }
+
+        return ConversationInfo(
+            summary: summary,
+            lastMessage: Self.truncateMessage(lastMessage, maxLength: 80),
+            lastMessageRole: lastMessageRole,
+            lastToolName: nil,
+            firstUserMessage: firstUserMessage,
+            lastUserMessageDate: lastUserMessageDate
+        )
+    }
+
     /// Format tool input for display in instance list
     private static func formatToolInput(_ input: [String: Any]?, toolName: String) -> String {
         guard let input = input else { return "" }
@@ -226,9 +349,18 @@ actor ConversationParser {
             if let pattern = input["pattern"] as? String {
                 return pattern
             }
-        case "Task":
-            if let description = input["description"] as? String {
+        case "Task", "spawn_agent":
+            if let description = input["description"] as? String, !description.isEmpty {
                 return description
+            }
+            if let message = input["message"] as? String, !message.isEmpty {
+                return message
+            }
+            if let name = input["name"] as? String, !name.isEmpty {
+                return name
+            }
+            if let agentType = input["agent_type"] as? String, !agentType.isEmpty {
+                return agentType.replacingOccurrences(of: "_", with: " ")
             }
         case "WebFetch":
             if let url = input["url"] as? String {
@@ -263,14 +395,19 @@ actor ConversationParser {
 
     /// Parse full conversation history for chat view (returns ALL messages - use sparingly)
     func parseFullConversation(sessionId: String, cwd: String) -> [ChatMessage] {
-        let sessionFile = Self.sessionFilePath(sessionId: sessionId, cwd: cwd)
+        guard let resolved = resolveSessionFile(sessionId: sessionId, cwd: cwd) else {
+            return []
+        }
+
+        let sessionFile = resolved.path
 
         guard FileManager.default.fileExists(atPath: sessionFile) else {
             return []
         }
 
         var state = incrementalState[sessionId] ?? IncrementalParseState()
-        _ = parseNewLines(filePath: sessionFile, state: &state)
+        prepareIncrementalState(&state, for: resolved)
+        _ = parseNewLines(filePath: sessionFile, format: resolved.format, sessionId: sessionId, state: &state)
         incrementalState[sessionId] = state
 
         return state.messages
@@ -288,7 +425,18 @@ actor ConversationParser {
 
     /// Parse only NEW messages since last call (efficient incremental updates)
     func parseIncremental(sessionId: String, cwd: String) -> IncrementalParseResult {
-        let sessionFile = Self.sessionFilePath(sessionId: sessionId, cwd: cwd)
+        guard let resolved = resolveSessionFile(sessionId: sessionId, cwd: cwd) else {
+            return IncrementalParseResult(
+                newMessages: [],
+                allMessages: [],
+                completedToolIds: [],
+                toolResults: [:],
+                structuredResults: [:],
+                clearDetected: false
+            )
+        }
+
+        let sessionFile = resolved.path
 
         guard FileManager.default.fileExists(atPath: sessionFile) else {
             return IncrementalParseResult(
@@ -302,7 +450,8 @@ actor ConversationParser {
         }
 
         var state = incrementalState[sessionId] ?? IncrementalParseState()
-        let newMessages = parseNewLines(filePath: sessionFile, state: &state)
+        prepareIncrementalState(&state, for: resolved)
+        let newMessages = parseNewLines(filePath: sessionFile, format: resolved.format, sessionId: sessionId, state: &state)
         let clearDetected = state.clearPending
         if clearDetected {
             state.clearPending = false
@@ -320,7 +469,12 @@ actor ConversationParser {
     }
 
     /// Parse only new lines since last read (incremental)
-    private func parseNewLines(filePath: String, state: inout IncrementalParseState) -> [ChatMessage] {
+    private func parseNewLines(
+        filePath: String,
+        format: SessionLogFormat,
+        sessionId: String,
+        state: inout IncrementalParseState
+    ) -> [ChatMessage] {
         guard let fileHandle = FileHandle(forReadingAtPath: filePath) else {
             return []
         }
@@ -354,6 +508,89 @@ actor ConversationParser {
 
         state.clearPending = false
         let isIncrementalRead = state.lastFileOffset > 0
+        let newMessages: [ChatMessage]
+        switch format {
+        case .claude:
+            newMessages = parseClaudeLines(
+                newContent,
+                state: &state,
+                isIncrementalRead: isIncrementalRead
+            )
+        case .codex:
+            newMessages = parseCodexLines(
+                newContent,
+                sessionId: sessionId,
+                state: &state
+            )
+        }
+
+        state.lastFileOffset = fileSize
+        return newMessages
+    }
+
+    /// Get set of completed tool IDs for a session
+    func completedToolIds(for sessionId: String) -> Set<String> {
+        return incrementalState[sessionId]?.completedToolIds ?? []
+    }
+
+    /// Get tool results for a session
+    func toolResults(for sessionId: String) -> [String: ToolResult] {
+        return incrementalState[sessionId]?.toolResults ?? [:]
+    }
+
+    /// Get structured tool results for a session
+    func structuredResults(for sessionId: String) -> [String: ToolResultData] {
+        return incrementalState[sessionId]?.structuredResults ?? [:]
+    }
+
+    /// Reset incremental state for a session (call when reloading)
+    func resetState(for sessionId: String) {
+        incrementalState.removeValue(forKey: sessionId)
+    }
+
+    /// Check if a /clear command was detected during the last parse
+    /// Returns true once and consumes the pending flag
+    func checkAndConsumeClearDetected(for sessionId: String) -> Bool {
+        guard var state = incrementalState[sessionId], state.clearPending else {
+            return false
+        }
+        state.clearPending = false
+        incrementalState[sessionId] = state
+        return true
+    }
+
+    /// Build Claude session file path
+    private static func claudeSessionFilePath(sessionId: String, cwd: String) -> String {
+        let projectDir = cwd.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ".", with: "-")
+        return NSHomeDirectory() + "/.claude/projects/" + projectDir + "/" + sessionId + ".jsonl"
+    }
+
+    private func resolveSessionFile(sessionId: String, cwd: String) -> ResolvedSessionFile? {
+        let claudePath = Self.claudeSessionFilePath(sessionId: sessionId, cwd: cwd)
+        if FileManager.default.fileExists(atPath: claudePath) {
+            return ResolvedSessionFile(path: claudePath, format: .claude)
+        }
+
+        if let codexPath = locateCodexSessionFile(sessionId: sessionId) {
+            return ResolvedSessionFile(path: codexPath, format: .codex)
+        }
+
+        return nil
+    }
+
+    private func prepareIncrementalState(_ state: inout IncrementalParseState, for resolved: ResolvedSessionFile) {
+        if state.filePath != resolved.path || state.format != resolved.format {
+            state = IncrementalParseState()
+            state.filePath = resolved.path
+            state.format = resolved.format
+        }
+    }
+
+    private func parseClaudeLines(
+        _ newContent: String,
+        state: inout IncrementalParseState,
+        isIncrementalRead: Bool
+    ) -> [ChatMessage] {
         let lines = newContent.components(separatedBy: "\n")
         var newMessages: [ChatMessage] = []
 
@@ -422,45 +659,192 @@ actor ConversationParser {
             }
         }
 
-        state.lastFileOffset = fileSize
         return newMessages
     }
 
-    /// Get set of completed tool IDs for a session
-    func completedToolIds(for sessionId: String) -> Set<String> {
-        return incrementalState[sessionId]?.completedToolIds ?? []
-    }
+    private func parseCodexLines(
+        _ newContent: String,
+        sessionId: String,
+        state: inout IncrementalParseState
+    ) -> [ChatMessage] {
+        let lines = newContent.components(separatedBy: "\n")
+        var newMessages: [ChatMessage] = []
 
-    /// Get tool results for a session
-    func toolResults(for sessionId: String) -> [String: ToolResult] {
-        return incrementalState[sessionId]?.toolResults ?? [:]
-    }
+        for line in lines where !line.isEmpty {
+            guard let lineData = line.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
+                  let type = json["type"] as? String else {
+                continue
+            }
 
-    /// Get structured tool results for a session
-    func structuredResults(for sessionId: String) -> [String: ToolResultData] {
-        return incrementalState[sessionId]?.structuredResults ?? [:]
-    }
+            let timestampString = json["timestamp"] as? String
+            let timestamp = Self.parseDate(timestampString) ?? Date()
 
-    /// Reset incremental state for a session (call when reloading)
-    func resetState(for sessionId: String) {
-        incrementalState.removeValue(forKey: sessionId)
-    }
+            switch type {
+            case "event_msg":
+                guard let payload = json["payload"] as? [String: Any],
+                      payload["type"] as? String == "user_message",
+                      let messageText = Self.normalizedText(payload["message"] as? String) else {
+                    continue
+                }
 
-    /// Check if a /clear command was detected during the last parse
-    /// Returns true once and consumes the pending flag
-    func checkAndConsumeClearDetected(for sessionId: String) -> Bool {
-        guard var state = incrementalState[sessionId], state.clearPending else {
-            return false
+                let message = ChatMessage(
+                    id: Self.codexMessageId(
+                        sessionId: sessionId,
+                        role: .user,
+                        timestamp: timestampString,
+                        text: messageText,
+                        ordinal: state.messages.count + newMessages.count
+                    ),
+                    role: .user,
+                    timestamp: timestamp,
+                    content: [.text(messageText)]
+                )
+                newMessages.append(message)
+                state.messages.append(message)
+
+            case "response_item":
+                guard let payload = json["payload"] as? [String: Any],
+                      payload["type"] as? String == "message",
+                      payload["role"] as? String == "assistant",
+                      let assistantText = Self.codexAssistantMessageText(payload) else {
+                    continue
+                }
+
+                let message = ChatMessage(
+                    id: Self.codexMessageId(
+                        sessionId: sessionId,
+                        role: .assistant,
+                        timestamp: timestampString,
+                        text: assistantText,
+                        ordinal: state.messages.count + newMessages.count
+                    ),
+                    role: .assistant,
+                    timestamp: timestamp,
+                    content: [.text(assistantText)]
+                )
+                newMessages.append(message)
+                state.messages.append(message)
+
+            default:
+                continue
+            }
         }
-        state.clearPending = false
-        incrementalState[sessionId] = state
-        return true
+
+        return newMessages
     }
 
-    /// Build session file path
-    private static func sessionFilePath(sessionId: String, cwd: String) -> String {
-        let projectDir = cwd.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ".", with: "-")
-        return NSHomeDirectory() + "/.claude/projects/" + projectDir + "/" + sessionId + ".jsonl"
+    private func locateCodexSessionFile(sessionId: String) -> String? {
+        let fileManager = FileManager.default
+
+        if let cachedPath = codexSessionPathCache[sessionId],
+           fileManager.fileExists(atPath: cachedPath) {
+            return cachedPath
+        }
+
+        let suffix = sessionId + ".jsonl"
+        let root = fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".codex")
+        let sessionsRoot = root.appendingPathComponent("sessions")
+
+        if let updatedAt = codexSessionIndexEntry(for: sessionId)?.updatedAt {
+            let dayDir = sessionsRoot
+                .appendingPathComponent(Self.codexYearFormatter.string(from: updatedAt))
+                .appendingPathComponent(Self.codexMonthFormatter.string(from: updatedAt))
+                .appendingPathComponent(Self.codexDayFormatter.string(from: updatedAt))
+
+            if let path = findSessionFile(in: dayDir, suffix: suffix, recursive: false) {
+                codexSessionPathCache[sessionId] = path
+                return path
+            }
+        }
+
+        if let path = findSessionFile(in: sessionsRoot, suffix: suffix, recursive: true) {
+            codexSessionPathCache[sessionId] = path
+            return path
+        }
+
+        let archivedRoot = root.appendingPathComponent("archived_sessions")
+        if let path = findSessionFile(in: archivedRoot, suffix: suffix, recursive: false) {
+            codexSessionPathCache[sessionId] = path
+            return path
+        }
+
+        return nil
+    }
+
+    private func findSessionFile(in directory: URL, suffix: String, recursive: Bool) -> String? {
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: directory.path) else { return nil }
+
+        if recursive {
+            guard let enumerator = fileManager.enumerator(
+                at: directory,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles]
+            ) else {
+                return nil
+            }
+
+            for case let fileURL as URL in enumerator {
+                guard fileURL.lastPathComponent.hasSuffix(suffix) else { continue }
+                return fileURL.path
+            }
+            return nil
+        }
+
+        guard let files = try? fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        ) else {
+            return nil
+        }
+
+        return files.first(where: { $0.lastPathComponent.hasSuffix(suffix) })?.path
+    }
+
+    private func codexSessionIndexEntry(for sessionId: String) -> CodexSessionIndexEntry? {
+        reloadCodexSessionIndexIfNeeded()
+        return codexIndexCache[sessionId]
+    }
+
+    private func reloadCodexSessionIndexIfNeeded() {
+        let indexPath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".codex/session_index.jsonl")
+
+        guard FileManager.default.fileExists(atPath: indexPath.path),
+              let attrs = try? FileManager.default.attributesOfItem(atPath: indexPath.path),
+              let modDate = attrs[.modificationDate] as? Date else {
+            codexIndexCache = [:]
+            codexIndexModDate = nil
+            return
+        }
+
+        if codexIndexModDate == modDate {
+            return
+        }
+
+        guard let content = try? String(contentsOf: indexPath, encoding: .utf8) else {
+            codexIndexCache = [:]
+            codexIndexModDate = modDate
+            return
+        }
+
+        var entries: [String: CodexSessionIndexEntry] = [:]
+        for line in content.components(separatedBy: "\n") where !line.isEmpty {
+            guard let lineData = line.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
+                  let id = json["id"] as? String else {
+                continue
+            }
+
+            entries[id] = CodexSessionIndexEntry(
+                threadName: Self.normalizedText(json["thread_name"] as? String),
+                updatedAt: Self.parseDate(json["updated_at"] as? String)
+            )
+        }
+
+        codexIndexCache = entries
+        codexIndexModDate = modDate
     }
 
     private func parseMessageLine(_ json: [String: Any], seenToolIds: inout Set<String>, toolIdToName: inout [String: String]) -> ChatMessage? {
@@ -571,6 +955,75 @@ actor ConversationParser {
         return ToolUseBlock(id: id, name: name, input: input)
     }
 
+    private static let codexYearFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy"
+        return formatter
+    }()
+
+    private static let codexMonthFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "MM"
+        return formatter
+    }()
+
+    private static let codexDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "dd"
+        return formatter
+    }()
+
+    private nonisolated static func parseDate(_ value: String?) -> Date? {
+        guard let value else { return nil }
+        if let date = iso8601FractionalFormatter.date(from: value) {
+            return date
+        }
+        return iso8601Formatter.date(from: value)
+    }
+
+    private nonisolated static func normalizedText(_ text: String?) -> String? {
+        guard let text else { return nil }
+        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return normalized.isEmpty ? nil : normalized
+    }
+
+    private nonisolated static func codexAssistantMessageText(_ payload: [String: Any]) -> String? {
+        guard let content = payload["content"] as? [[String: Any]] else {
+            return nil
+        }
+
+        let texts = content.compactMap { block -> String? in
+            let type = block["type"] as? String
+            switch type {
+            case "output_text", "text", "input_text":
+                return normalizedText(block["text"] as? String)
+            default:
+                return nil
+            }
+        }
+
+        guard !texts.isEmpty else { return nil }
+        return texts.joined(separator: "\n")
+    }
+
+    private nonisolated static func codexMessageId(
+        sessionId: String,
+        role: ChatRole,
+        timestamp: String?,
+        text: String,
+        ordinal: Int
+    ) -> String {
+        let safeTimestamp = timestamp ?? "unknown"
+        let digest = abs(text.hashValue)
+        return "codex-\(sessionId)-\(role.rawValue)-\(safeTimestamp)-\(ordinal)-\(digest)"
+    }
+
     // MARK: - Structured Result Parsing
 
     /// Parse tool result JSON into structured ToolResultData
@@ -605,7 +1058,7 @@ actor ConversationParser {
             return parseGlobResult(toolUseResult)
         case "TodoWrite":
             return parseTodoWriteResult(toolUseResult)
-        case "Task":
+        case "Task", "spawn_agent":
             return parseTaskResult(toolUseResult)
         case "WebFetch":
             return parseWebFetchResult(toolUseResult)
@@ -1054,4 +1507,3 @@ extension ConversationParser {
         return tools
     }
 }
-

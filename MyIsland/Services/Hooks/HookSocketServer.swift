@@ -12,7 +12,7 @@ import os.log
 /// Logger for hook socket server
 private let logger = Logger(subsystem: "com.myisland", category: "Hooks")
 
-/// Event received from Claude Code hooks
+/// Event received from CLI hook bridges
 struct HookEvent: Codable, Sendable {
     let sessionId: String
     let cwd: String
@@ -25,6 +25,9 @@ struct HookEvent: Codable, Sendable {
     let toolUseId: String?
     let notificationType: String?
     let message: String?
+    let agentId: String?
+    let agentType: String?
+    let lastAssistantMessage: String?
     let source: String?
 
     enum CodingKeys: String, CodingKey {
@@ -34,10 +37,29 @@ struct HookEvent: Codable, Sendable {
         case toolUseId = "tool_use_id"
         case notificationType = "notification_type"
         case message
+        case agentId = "agent_id"
+        case agentType = "agent_type"
+        case lastAssistantMessage = "last_assistant_message"
     }
 
     /// Create a copy with updated toolUseId
-    init(sessionId: String, cwd: String, event: String, status: String, pid: Int?, tty: String?, tool: String?, toolInput: [String: AnyCodable]?, toolUseId: String?, notificationType: String?, message: String?, source: String? = nil) {
+    init(
+        sessionId: String,
+        cwd: String,
+        event: String,
+        status: String,
+        pid: Int?,
+        tty: String?,
+        tool: String?,
+        toolInput: [String: AnyCodable]?,
+        toolUseId: String?,
+        notificationType: String?,
+        message: String?,
+        agentId: String? = nil,
+        agentType: String? = nil,
+        lastAssistantMessage: String? = nil,
+        source: String? = nil
+    ) {
         self.sessionId = sessionId
         self.cwd = cwd
         self.event = event
@@ -49,6 +71,9 @@ struct HookEvent: Codable, Sendable {
         self.toolUseId = toolUseId
         self.notificationType = notificationType
         self.message = message
+        self.agentId = agentId
+        self.agentType = agentType
+        self.lastAssistantMessage = lastAssistantMessage
         self.source = source
     }
 
@@ -469,7 +494,11 @@ class HookSocketServer {
                 toolInput: event.toolInput,
                 toolUseId: toolUseId,  // Use resolved toolUseId
                 notificationType: event.notificationType,
-                message: event.message
+                message: event.message,
+                agentId: event.agentId,
+                agentType: event.agentType,
+                lastAssistantMessage: event.lastAssistantMessage,
+                source: event.source
             )
 
             let pending = PendingPermission(

@@ -23,7 +23,8 @@ class JSONLInterruptWatcher {
     private var source: DispatchSourceFileSystemObject?
     private var lastOffset: UInt64 = 0
     private let sessionId: String
-    private let filePath: String
+    private let cwd: String
+    private var filePath: String?
     private let queue = DispatchQueue(label: "com.myisland.interruptwatcher", qos: .userInteractive)
 
     weak var delegate: JSONLInterruptWatcherDelegate?
@@ -39,9 +40,8 @@ class JSONLInterruptWatcher {
 
     init(sessionId: String, cwd: String) {
         self.sessionId = sessionId
-        let projectDir = cwd.replacingOccurrences(of: "/", with: "-")
-                            .replacingOccurrences(of: ".", with: "-")
-        self.filePath = NSHomeDirectory() + "/.claude/projects/" + projectDir + "/" + sessionId + ".jsonl"
+        self.cwd = cwd
+        self.filePath = Self.resolveSessionFilePath(sessionId: sessionId, cwd: cwd)
     }
 
     /// Start watching the JSONL file for interrupts
@@ -54,9 +54,13 @@ class JSONLInterruptWatcher {
     private func startWatching() {
         stopInternal()
 
-        guard FileManager.default.fileExists(atPath: filePath),
+        filePath = Self.resolveSessionFilePath(sessionId: sessionId, cwd: cwd)
+
+        guard let filePath,
+              FileManager.default.fileExists(atPath: filePath),
               let handle = FileHandle(forReadingAtPath: filePath) else {
-            logger.warning("Failed to open file: \(self.filePath, privacy: .public)")
+            let attemptedPath = filePath ?? Self.claudeSessionFilePath(sessionId: sessionId, cwd: cwd)
+            logger.warning("Failed to open file: \(attemptedPath, privacy: .public)")
             return
         }
 
@@ -130,6 +134,17 @@ class JSONLInterruptWatcher {
     }
 
     private func isInterruptLine(_ line: String) -> Bool {
+        if let lineData = line.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
+           let type = json["type"] as? String {
+            if type == "event_msg",
+               let payload = json["payload"] as? [String: Any],
+               payload["type"] as? String == "turn_aborted",
+               payload["reason"] as? String == "interrupted" {
+                return true
+            }
+        }
+
         if line.contains("\"type\":\"user\"") {
             if line.contains("[Request interrupted by user]") ||
                line.contains("[Request interrupted by user for tool use]") {
@@ -150,6 +165,36 @@ class JSONLInterruptWatcher {
         }
 
         return false
+    }
+
+    private static func claudeSessionFilePath(sessionId: String, cwd: String) -> String {
+        let projectDir = cwd.replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ".", with: "-")
+        return NSHomeDirectory() + "/.claude/projects/" + projectDir + "/" + sessionId + ".jsonl"
+    }
+
+    private static func resolveSessionFilePath(sessionId: String, cwd: String) -> String? {
+        let claudePath = claudeSessionFilePath(sessionId: sessionId, cwd: cwd)
+        if FileManager.default.fileExists(atPath: claudePath) {
+            return claudePath
+        }
+
+        return locateCodexSessionFile(sessionId: sessionId)
+    }
+
+    private static func locateCodexSessionFile(sessionId: String) -> String? {
+        let root = NSHomeDirectory() + "/.codex/sessions"
+        guard let enumerator = FileManager.default.enumerator(atPath: root) else {
+            return nil
+        }
+
+        let suffix = "\(sessionId).jsonl"
+        for case let relativePath as String in enumerator {
+            guard relativePath.hasSuffix(suffix) else { continue }
+            return (root as NSString).appendingPathComponent(relativePath)
+        }
+
+        return nil
     }
 
     /// Stop watching

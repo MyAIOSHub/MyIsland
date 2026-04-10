@@ -227,6 +227,18 @@ struct NotchView: View {
         }
         .onChange(of: sessionMonitor.instances) { _, instances in
             viewModel.sessionCount = instances.count
+            // Calculate extra height for interactive content (AskUserQuestion options, etc.)
+            var extraHeight: CGFloat = 0
+            for session in instances {
+                if let questions = session.pendingQuestions, !questions.isEmpty {
+                    for q in questions {
+                        extraHeight += 30  // question text
+                        extraHeight += CGFloat(q.options.count) * 44  // option cards
+                        extraHeight += 36  // jump button + spacing
+                    }
+                }
+            }
+            viewModel.interactiveContentHeight = extraHeight
             handleProcessingChange()
             handleWaitingForInputChange(instances)
         }
@@ -239,6 +251,12 @@ struct NotchView: View {
         .onReceive(NotificationCenter.default.publisher(for: .updateReadyToInstallNotification)) { _ in
             if viewModel.status == .closed {
                 viewModel.contentType = .menu
+                viewModel.notchOpen(reason: .notification)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .browserSummaryCompleted)) { _ in
+            if viewModel.status == .closed {
+                viewModel.contentType = .browserActivity
                 viewModel.notchOpen(reason: .notification)
             }
         }
@@ -547,6 +565,8 @@ struct NotchView: View {
                 VoiceSettingsView(viewModel: viewModel, voiceCoordinator: VoiceInputCoordinator.shared, processor: ASRPostProcessor.shared)
             case .petGacha:
                 PetGachaView(viewModel: viewModel)
+            case .browserActivity:
+                BrowserActivityView(viewModel: viewModel)
             case .chat(let session):
                 ChatView(
                     sessionId: session.sessionId,

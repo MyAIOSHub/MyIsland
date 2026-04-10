@@ -55,6 +55,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             VoiceInputCoordinator.shared.start()
         }
 
+        // Start browser event server for extension integration
+        BrowserEventServer.shared.start { event in
+            Task { @MainActor in
+                BrowserSessionMonitor.shared.handleEvent(event)
+            }
+        }
+        BrowserSessionMonitor.shared.startCleanup()
+
+        // Start Claude Desktop session watcher
+        ClaudeDesktopWatcher.shared.start()
+
         NSApplication.shared.setActivationPolicy(.accessory)
 
         windowManager = WindowManager()

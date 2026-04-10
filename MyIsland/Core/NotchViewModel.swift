@@ -33,6 +33,7 @@ enum NotchContentType: Equatable {
     case displaySettings
     case voiceSettings
     case petGacha
+    case browserActivity
     case chat(SessionState)
 
     var id: String {
@@ -43,6 +44,7 @@ enum NotchContentType: Equatable {
         case .displaySettings: return "displaySettings"
         case .voiceSettings: return "voiceSettings"
         case .petGacha: return "petGacha"
+        case .browserActivity: return "browserActivity"
         case .chat(let session): return "chat-\(session.sessionId)"
         }
     }
@@ -57,6 +59,7 @@ class NotchViewModel: ObservableObject {
     @Published var contentType: NotchContentType = .instances
     @Published var isHovering: Bool = false
     @Published var sessionCount: Int = 0
+    @Published var interactiveContentHeight: CGFloat = 0
 
     /// Screen-coordinate rect of the pet icon, updated by NotchView via GeometryReader.
     var petIconScreenRect: CGRect = .zero
@@ -113,13 +116,18 @@ class NotchViewModel: ObservableObject {
                 width: min(screenRect.width * 0.4, panelW),
                 height: min(maxH, 500)
             )
+        case .browserActivity:
+            return CGSize(
+                width: min(screenRect.width * 0.4, panelW),
+                height: min(maxH, 420)
+            )
         case .instances:
-            // Dynamic height: header(40) + per-session row(60) + padding(20)
+            // Dynamic height: header(40) + per-session row(60) + padding(20) + interactive content
             // When no sessions, use same height as 1 session for consistent appearance
             let rowHeight: CGFloat = 60
             let baseHeight: CGFloat = 60  // header + padding
             let effectiveCount = max(sessionCount, 1)
-            let contentHeight = baseHeight + CGFloat(min(effectiveCount, 5)) * rowHeight
+            let contentHeight = baseHeight + CGFloat(min(effectiveCount, 5)) * rowHeight + interactiveContentHeight
             return CGSize(
                 width: min(screenRect.width * 0.4, panelW),
                 height: min(maxH, contentHeight)
