@@ -217,6 +217,9 @@
 "update.upToDate" = "最新バージョンです!";
 "update.upToDateDesc" = "My Island %@ は最新バージョンです。";
 "update.error" = "アップデートエラー";
+"update.retry" = "再試行";
+"update.readyTitle" = "アップデートの準備ができました";
+"update.readyBody" = "クリックすると My Island を再起動し、バージョン %@ のインストールを完了します。";
 
 /* 設定：サウンドと詳細設定 */
 "settings.sound" = "サウンド";

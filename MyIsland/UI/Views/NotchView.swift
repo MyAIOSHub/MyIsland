@@ -689,7 +689,8 @@ struct NotchView: View {
             let newlyWaitingSessions = waitingForInputSessions.filter { newWaitingIds.contains($0.stableId) }
 
             // Play notification sound if the session is not actively focused
-            if let soundName = AppSettings.notificationSound.soundName {
+            if !WindowManager.isSuppressingNotificationSound,
+               let soundName = AppSettings.notificationSound.soundName {
                 // Check if we should play sound (async check for tmux pane focus)
                 Task {
                     let shouldPlaySound = await shouldPlayNotificationSound(for: newlyWaitingSessions)

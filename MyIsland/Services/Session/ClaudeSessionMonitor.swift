@@ -200,6 +200,8 @@ class ClaudeSessionMonitor: ObservableObject {
     private var recentUserMessageTimes: [Date] = []
 
     private func updateFromSessions(_ sessions: [SessionState]) {
+        let shouldPlayTransitionSounds = !WindowManager.isSuppressingNotificationSound
+
         // Detect phase transitions for sound playback
         for session in sessions {
             let prevPhase = previousPhases[session.sessionId]
@@ -212,15 +214,23 @@ class ClaudeSessionMonitor: ObservableObject {
 
             if prevPhase == nil {
                 // New session
-                SoundPlayer.shared.play(.sessionStart)
+                if shouldPlayTransitionSounds {
+                    SoundPlayer.shared.play(.sessionStart)
+                }
             } else if prevPhase != newPhase && !isContextResume {
                 switch newPhase {
                 case .waitingForInput:
-                    SoundPlayer.shared.play(.taskComplete)
+                    if shouldPlayTransitionSounds {
+                        SoundPlayer.shared.play(.taskComplete)
+                    }
                 case .waitingForApproval:
-                    SoundPlayer.shared.play(.approvalNeeded)
+                    if shouldPlayTransitionSounds {
+                        SoundPlayer.shared.play(.approvalNeeded)
+                    }
                 case .compacting:
-                    SoundPlayer.shared.play(.contextLimit)
+                    if shouldPlayTransitionSounds {
+                        SoundPlayer.shared.play(.contextLimit)
+                    }
                 default:
                     break
                 }

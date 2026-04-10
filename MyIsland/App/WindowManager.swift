@@ -9,6 +9,21 @@ import AppKit
 import CoreGraphics
 import os.log
 
+enum NotchWindowSetupReason {
+    case initialLaunch
+    case screenParametersChanged
+    case mouseScreenChanged
+
+    var shouldSuppressNotificationSound: Bool {
+        switch self {
+        case .initialLaunch:
+            return false
+        case .screenParametersChanged, .mouseScreenChanged:
+            return true
+        }
+    }
+}
+
 /// Logger for window management
 private let logger = Logger(subsystem: "com.myisland", category: "Window")
 
@@ -32,6 +47,9 @@ func logAllWindows() {
 }
 
 class WindowManager {
+    private static var suppressNotificationSoundUntil = Date.distantPast
+    private static let notificationSoundSuppressionDuration: TimeInterval = 1.5
+
     private(set) var windowController: NotchWindowController?
 
     /// Track last screen frame to skip unnecessary recreations
@@ -40,6 +58,10 @@ class WindowManager {
     /// Track current screen for mouse-follow detection
     private var currentScreenID: CGDirectDisplayID?
     private var mouseMonitor: Any?
+
+    static var isSuppressingNotificationSound: Bool {
+        Date() < suppressNotificationSoundUntil
+    }
 
     /// Start monitoring mouse position for screen changes (automatic mode)
     func startMouseScreenMonitoring() {
@@ -53,7 +75,7 @@ class WindowManager {
             if screenNumber != self?.currentScreenID {
                 self?.currentScreenID = screenNumber
                 DispatchQueue.main.async {
-                    _ = self?.setupNotchWindow()
+                    _ = self?.setupNotchWindow(reason: .mouseScreenChanged)
                 }
             }
         }
@@ -67,7 +89,7 @@ class WindowManager {
     }
 
     /// Set up or recreate the notch window
-    func setupNotchWindow() -> NotchWindowController? {
+    func setupNotchWindow(reason: NotchWindowSetupReason = .initialLaunch) -> NotchWindowController? {
         // Use ScreenSelector for screen selection
         let screenSelector = ScreenSelector.shared
         screenSelector.refreshScreens()
@@ -81,6 +103,10 @@ class WindowManager {
         if windowController != nil && screen.frame == lastScreenFrame {
             logger.debug("Screen frame unchanged, skipping window recreation")
             return windowController
+        }
+
+        if reason.shouldSuppressNotificationSound {
+            Self.suppressNotificationSoundUntil = Date().addingTimeInterval(Self.notificationSoundSuppressionDuration)
         }
 
         lastScreenFrame = screen.frame

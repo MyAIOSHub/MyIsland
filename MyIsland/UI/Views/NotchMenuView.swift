@@ -305,7 +305,7 @@ struct UpdateRow: View {
                 Image(systemName: "checkmark")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundColor(TerminalColors.green)
-                Text("已是最新")
+                Text(String(localized: "update.upToDate"))
                     .font(.system(size: 11))
                     .foregroundColor(TerminalColors.green)
             }
@@ -358,7 +358,7 @@ struct UpdateRow: View {
             }
 
         case .error:
-            Text("重试")
+            Text(String(localized: "update.retry"))
                 .font(.system(size: 11))
                 .foregroundColor(.white.opacity(0.5))
         }
@@ -413,23 +413,23 @@ struct UpdateRow: View {
     private var label: String {
         switch updateManager.state {
         case .idle:
-            return "检查更新"
+            return String(localized: "beta.checkUpdate")
         case .checking:
-            return "检查中..."
+            return String(localized: "update.checking")
         case .upToDate:
-            return "检查更新"
+            return String(localized: "beta.checkUpdate")
         case .found:
-            return "下载更新"
+            return String(localized: "update.install")
         case .downloading:
-            return "下载中..."
+            return String(localized: "update.downloading")
         case .extracting:
-            return "解压中..."
+            return String(localized: "update.extracting")
         case .readyToInstall:
-            return "重启并安装"
+            return String(localized: "update.installRelaunch")
         case .installing:
-            return "安装中..."
+            return String(localized: "update.installing")
         case .error:
-            return "更新失败"
+            return String(localized: "update.error")
         }
     }
 

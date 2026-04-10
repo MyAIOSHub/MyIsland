@@ -217,6 +217,9 @@
 "update.upToDate" = "You're up to date!";
 "update.upToDateDesc" = "My Island %@ is the latest version.";
 "update.error" = "Update Error";
+"update.retry" = "Retry";
+"update.readyTitle" = "Update Ready";
+"update.readyBody" = "Click to restart My Island and finish installing version %@.";
 
 /* Settings: Sound & Advanced */
 "settings.sound" = "Sound";

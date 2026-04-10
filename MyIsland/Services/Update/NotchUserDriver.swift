@@ -73,20 +73,24 @@ class UpdateManager: NSObject, ObservableObject {
     }
 
     func installAndRelaunch() {
+        AppDelegate.shared?.clearUpdateReadyNotifications()
         installHandler?(.install)
     }
 
     func skipUpdate() {
+        AppDelegate.shared?.clearUpdateReadyNotifications()
         installHandler?(.skip)
         state = .idle
     }
 
     func dismissUpdate() {
+        AppDelegate.shared?.clearUpdateReadyNotifications()
         installHandler?(.dismiss)
         state = .idle
     }
 
     func cancelDownload() {
+        AppDelegate.shared?.clearUpdateReadyNotifications()
         cancellationHandler?()
         state = .idle
     }
@@ -140,13 +144,16 @@ class UpdateManager: NSObject, ObservableObject {
         self.state = .readyToInstall(version: currentVersion)
         // Proactively expand notch to prompt restart
         NotificationCenter.default.post(name: .updateReadyToInstallNotification, object: nil)
+        AppDelegate.shared?.scheduleUpdateReadyNotification(version: currentVersion)
     }
 
     func installing() {
+        AppDelegate.shared?.clearUpdateReadyNotifications()
         self.state = .installing
     }
 
     func installed(relaunched: Bool) {
+        AppDelegate.shared?.clearUpdateReadyNotifications()
         self.state = .idle
     }
 
@@ -162,6 +169,7 @@ class UpdateManager: NSObject, ObservableObject {
     }
 
     func updateError(_ message: String) {
+        AppDelegate.shared?.clearUpdateReadyNotifications()
         self.state = .error(message: message)
     }
 
@@ -170,6 +178,7 @@ class UpdateManager: NSObject, ObservableObject {
         if case .upToDate = state {
             return
         }
+        AppDelegate.shared?.clearUpdateReadyNotifications()
         self.state = .idle
         self.installHandler = nil
         self.cancellationHandler = nil

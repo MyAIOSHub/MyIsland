@@ -217,6 +217,9 @@
 "update.upToDate" = "已是最新版本!";
 "update.upToDateDesc" = "My Island %@ 是最新版本。";
 "update.error" = "更新错误";
+"update.retry" = "重试";
+"update.readyTitle" = "更新已准备就绪";
+"update.readyBody" = "点击后将重启 My Island，并完成 %@ 的安装。";
 
 /* 设置：声音与高级 */
 "settings.sound" = "声音";
