@@ -18,8 +18,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     let updater: SPUUpdater
     private let userDriver: NotchUserDriver
 
+    private static var isRunningTests: Bool {
+        Foundation.ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+
     var windowController: NotchWindowController? {
         windowManager?.windowController
+    }
+
+    func showMeetingArchive(meetingID: String? = nil) {
+        windowManager?.showMeetingArchive(selectedMeetingID: meetingID)
+    }
+
+    func showMeetingHub() {
+        windowManager?.showMeetingHub()
     }
 
     override init() {
@@ -33,14 +45,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         super.init()
         AppDelegate.shared = self
 
-        do {
-            try updater.start()
-        } catch {
-            print("Failed to start Sparkle updater: \(error)")
+        if !Self.isRunningTests {
+            do {
+                try updater.start()
+            } catch {
+                print("Failed to start Sparkle updater: \(error)")
+            }
         }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if Self.isRunningTests {
+            return
+        }
+
         if !ensureSingleInstance() {
             NSApplication.shared.terminate(nil)
             return
@@ -78,6 +96,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         // Start Claude Desktop session watcher
         ClaudeDesktopWatcher.shared.start()
+        _ = MeetingCoordinator.shared
 
         NSApplication.shared.setActivationPolicy(.accessory)
 

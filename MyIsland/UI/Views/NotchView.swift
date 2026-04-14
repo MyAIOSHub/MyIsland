@@ -269,12 +269,19 @@ struct NotchView: View {
         isProcessing || hasPendingPermission || hasWaitingForInput
     }
 
+    private var headerHeight: CGFloat {
+        if viewModel.status == .opened {
+            return 46
+        }
+        return max(24, closedNotchSize.height)
+    }
+
     @ViewBuilder
     private var notchLayout: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header row - always present, contains crab and spinner that persist across states
             headerRow
-                .frame(height: max(24, closedNotchSize.height))
+                .frame(height: headerHeight)
 
             // Main content only when opened
             if viewModel.status == .opened {
@@ -359,13 +366,13 @@ struct NotchView: View {
         if voiceCoordinator.voiceState != .idle {
             voiceRecordingHeader
         } else {
-        HStack(spacing: 0) {
+        HStack(alignment: viewModel.status == .opened ? .top : .center, spacing: 0) {
             // Left side - always show pet/crab icon
-            HStack(spacing: 4) {
-                petLauncherIcon(isOpened: viewModel.status == .opened)
-
+            HStack(alignment: viewModel.status == .opened ? .top : .center, spacing: 4) {
                 if viewModel.status == .opened {
-                    clipboardLauncherIcon()
+                    openedLauncherCluster
+                } else {
+                    petLauncherIcon(isOpened: false)
                 }
 
                 // Permission indicator only (amber)
@@ -463,7 +470,7 @@ struct NotchView: View {
                 Spacer().frame(width: 4)
             }
         }
-        .frame(height: closedNotchSize.height)
+        .frame(height: headerHeight)
         } // else (non-voice header)
     }
 
@@ -523,6 +530,19 @@ struct NotchView: View {
         }
     }
 
+    @ViewBuilder
+    private var openedLauncherCluster: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(NotchLauncherLayout.openedRows.enumerated()), id: \.offset) { _, row in
+                HStack(spacing: 4) {
+                    ForEach(row, id: \.self) { item in
+                        launcherIcon(for: item)
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Content View (Opened State)
 
     @ViewBuilder
@@ -544,6 +564,14 @@ struct NotchView: View {
                 DisplaySettingsView(viewModel: viewModel)
             case .voiceSettings:
                 VoiceSettingsView(viewModel: viewModel, voiceCoordinator: VoiceInputCoordinator.shared, processor: ASRPostProcessor.shared)
+            case .meetingHub:
+                MeetingHubView(viewModel: viewModel)
+            case .meetingLive:
+                MeetingLiveView(viewModel: viewModel)
+            case .meetingSettings:
+                MeetingSettingsView(viewModel: viewModel)
+            case .meetingDetail(let record):
+                MeetingDetailView(viewModel: viewModel, record: record)
             case .petGacha:
                 PetGachaView(viewModel: viewModel)
             case .browserActivity:
@@ -619,6 +647,44 @@ struct NotchView: View {
         }
         .buttonStyle(.plain)
         .help(NSLocalizedString("notch.launcher.clipboard", comment: ""))
+    }
+
+    @ViewBuilder
+    private func meetingLauncherIcon() -> some View {
+        let icon = ZStack {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(DesignTokens.Surface.base)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(DesignTokens.Border.subtle, lineWidth: 1)
+                )
+            Image(systemName: "person.2.wave.2")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.white.opacity(0.82))
+        }
+        .frame(width: 18, height: 18)
+
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                viewModel.showMeetingHub()
+            }
+        } label: {
+            icon
+        }
+        .buttonStyle(.plain)
+        .help(NSLocalizedString("notch.launcher.meeting", comment: ""))
+    }
+
+    @ViewBuilder
+    private func launcherIcon(for item: NotchLauncherItem) -> some View {
+        switch item {
+        case .pet:
+            petLauncherIcon(isOpened: true)
+        case .clipboard:
+            clipboardLauncherIcon()
+        case .meetingAssistant:
+            meetingLauncherIcon()
+        }
     }
 
     // MARK: - Notch Icon (pet or crab)

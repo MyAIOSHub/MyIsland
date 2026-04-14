@@ -33,6 +33,10 @@ enum NotchContentType: Equatable {
     case soundSettings
     case displaySettings
     case voiceSettings
+    case meetingHub
+    case meetingLive
+    case meetingSettings
+    case meetingDetail(MeetingRecord)
     case petGacha
     case browserActivity
     case chat(SessionState)
@@ -45,10 +49,20 @@ enum NotchContentType: Equatable {
         case .soundSettings: return "soundSettings"
         case .displaySettings: return "displaySettings"
         case .voiceSettings: return "voiceSettings"
+        case .meetingHub: return "meetingHub"
+        case .meetingLive: return "meetingLive"
+        case .meetingSettings: return "meetingSettings"
+        case .meetingDetail(let meeting): return "meetingDetail-\(meeting.id)"
         case .petGacha: return "petGacha"
         case .browserActivity: return "browserActivity"
         case .chat(let session): return "chat-\(session.sessionId)"
         }
+    }
+}
+
+enum NotchSizing {
+    static func meetingLiveWidth(screenWidth: CGFloat, panelWidth: CGFloat) -> CGFloat {
+        min(screenWidth * 0.86, max(panelWidth, 620) * 2)
     }
 }
 
@@ -62,6 +76,7 @@ class NotchViewModel: ObservableObject {
     @Published var isHovering: Bool = false
     @Published var sessionCount: Int = 0
     @Published var interactiveContentHeight: CGFloat = 0
+    @Published var meetingHasAdviceCards: Bool = false
 
     /// Screen-coordinate rect of the pet icon, updated by NotchView via GeometryReader.
     var petIconScreenRect: CGRect = .zero
@@ -122,6 +137,28 @@ class NotchViewModel: ObservableObject {
                 width: min(screenRect.width * 0.4, panelW),
                 height: min(maxH, 400)
             )
+        case .meetingHub:
+            return CGSize(
+                width: min(screenRect.width * 0.52, max(panelW, 560)),
+                height: min(maxH, 640)
+            )
+        case .meetingLive:
+            let fullW = NotchSizing.meetingLiveWidth(screenWidth: screenRect.width, panelWidth: panelW)
+            let halfW = max(fullW / 2, max(panelW, 620))
+            return CGSize(
+                width: meetingHasAdviceCards ? fullW : halfW,
+                height: min(maxH, 720)
+            )
+        case .meetingSettings:
+            return CGSize(
+                width: min(screenRect.width * 0.54, max(panelW, 580)),
+                height: min(maxH, 700)
+            )
+        case .meetingDetail:
+            return CGSize(
+                width: min(screenRect.width * 0.58, max(panelW, 640)),
+                height: min(maxH, 700)
+            )
         case .petGacha:
             return CGSize(
                 width: min(screenRect.width * 0.4, panelW),
@@ -179,6 +216,18 @@ class NotchViewModel: ObservableObject {
         soundSelector.$isPickerExpanded
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+
+        MeetingCoordinator.shared.$activeMeeting
+            .combineLatest(
+                MeetingCoordinator.shared.$activeAdviceCards,
+                MeetingCoordinator.shared.$isGeneratingThinking
+            )
+            .map { meeting, cards, thinking in
+                (meeting?.state == .recording) || !cards.isEmpty || thinking
+            }
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .assign(to: &$meetingHasAdviceCards)
     }
 
     // MARK: - Event Handling
@@ -342,6 +391,24 @@ class NotchViewModel: ObservableObject {
     func showClipboardHistory() {
         currentChatSession = nil
         contentType = .clipboardHistory
+        notchOpen(reason: .click)
+    }
+
+    func showMeetingHub() {
+        currentChatSession = nil
+        contentType = .meetingHub
+        notchOpen(reason: .click)
+    }
+
+    func showMeetingSettings() {
+        currentChatSession = nil
+        contentType = .meetingSettings
+        notchOpen(reason: .click)
+    }
+
+    func showMeetingDetail(_ meeting: MeetingRecord) {
+        currentChatSession = nil
+        contentType = .meetingDetail(meeting)
         notchOpen(reason: .click)
     }
 

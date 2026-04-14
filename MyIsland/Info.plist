@@ -24,6 +24,8 @@
     <string>72TBmCR1stDi/o1T+unqwzXckwVlD/tQe/He3xmgbJ4=</string>
 
     <!-- Voice Input Permissions -->
+    <key>NSCalendarsUsageDescription</key>
+    <string>My Island 需要日历权限以同步预约会议到 Apple Calendar。</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>My Island 需要麦克风权限以使用语音输入功能，将语音转文字发送到 Claude 会话。</string>
     <key>NSSpeechRecognitionUsageDescription</key>

@@ -128,6 +128,7 @@
 "clipboard.image.body" = "Image snapshot saved to My Island";
 "notch.launcher.sessions" = "Open Vibe Coding Panel";
 "notch.launcher.clipboard" = "Open Clipboard History";
+"notch.launcher.meeting" = "Open Meeting Assistant";
 
 /* Tasks */
 "tasks.title" = "Tasks";

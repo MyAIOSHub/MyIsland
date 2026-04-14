@@ -83,6 +83,15 @@ struct NotchMenuView: View {
             }
 
             MenuRow(
+                icon: "person.2.wave.2",
+                label: "会议助手"
+            ) {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    viewModel.contentType = .meetingHub
+                }
+            }
+
+            MenuRow(
                 icon: "doc.on.clipboard",
                 label: String(localized: "clipboard.title")
             ) {

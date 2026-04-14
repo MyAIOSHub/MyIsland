@@ -128,6 +128,7 @@
 "clipboard.image.body" = "图片快照已保存到 My Island";
 "notch.launcher.sessions" = "打开 Vibe Coding 窗口";
 "notch.launcher.clipboard" = "打开剪切板历史";
+"notch.launcher.meeting" = "打开会议助手";
 
 /* 任务 */
 "tasks.title" = "任务";

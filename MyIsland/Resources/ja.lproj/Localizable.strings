@@ -128,6 +128,7 @@
 "clipboard.image.body" = "画像スナップショットを My Island に保存しました";
 "notch.launcher.sessions" = "Vibe Coding パネルを開く";
 "notch.launcher.clipboard" = "クリップボード履歴を開く";
+"notch.launcher.meeting" = "会議アシスタントを開く";
 
 /* タスク */
 "tasks.title" = "タスク";

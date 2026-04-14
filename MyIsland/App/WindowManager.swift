@@ -51,6 +51,7 @@ class WindowManager {
     private static let notificationSoundSuppressionDuration: TimeInterval = 1.5
 
     private(set) var windowController: NotchWindowController?
+    private(set) var meetingArchiveWindowController: MeetingArchiveWindowController?
 
     /// Track last screen frame to skip unnecessary recreations
     private var lastScreenFrame: NSRect = .zero
@@ -121,5 +122,26 @@ class WindowManager {
         windowController?.showWindow(nil)
 
         return windowController
+    }
+
+    func showMeetingArchive(selectedMeetingID: String? = nil) {
+        if let meetingArchiveWindowController {
+            meetingArchiveWindowController.show(selectedMeetingID: selectedMeetingID)
+            return
+        }
+
+        let controller = MeetingArchiveWindowController(selectedMeetingID: selectedMeetingID)
+        meetingArchiveWindowController = controller
+        controller.show(selectedMeetingID: selectedMeetingID)
+    }
+
+    func showMeetingHub() {
+        if windowController == nil {
+            _ = setupNotchWindow()
+        }
+
+        windowController?.viewModel.showMeetingHub()
+        windowController?.showWindow(nil)
+        NSApplication.shared.activate(ignoringOtherApps: true)
     }
 }

@@ -1,0 +1,31 @@
+{
+  "runtimeSkills": [
+    {"id":"meeting-socratic","title":"Socratic","summary":"追问定义、前提和反事实。","relativePath":"runtime-skills/meeting-socratic.md","sourceRefs":["skillcollection/ljg-learn"],"tags":["questioning","clarification"]},
+    {"id":"meeting-first-principles","title":"First Principles","summary":"拆到不可再分的关键约束和本质变量。","relativePath":"runtime-skills/meeting-first-principles.md","sourceRefs":["skillcollection/ljg-think","skillcollection/ljg-rank"],"tags":["principles","decomposition"]},
+    {"id":"meeting-jtbd","title":"JTBD","summary":"追问用户工作和真实替代方案。","relativePath":"runtime-skills/meeting-jtbd.md","sourceRefs":["internal"],"tags":["user","jtbd"]},
+    {"id":"meeting-critic","title":"Critic","summary":"找出当前论证最脆弱的一环和反例。","relativePath":"runtime-skills/meeting-critic.md","sourceRefs":["agora/forge"],"tags":["critic","risk"]},
+    {"id":"meeting-tradeoff","title":"Tradeoff","summary":"明确取舍，不让方案评审停在口号。","relativePath":"runtime-skills/meeting-tradeoff.md","sourceRefs":["internal"],"tags":["tradeoff","decision"]},
+    {"id":"meeting-roundtable","title":"Roundtable","summary":"构造有张力的多角色对打。","relativePath":"runtime-skills/meeting-roundtable.md","sourceRefs":["skillcollection/ljg-roundtable","agora/atelier"],"tags":["roundtable","debate"]},
+    {"id":"meeting-decision","title":"Decision","summary":"推动拍板，明确是否继续和为什么。","relativePath":"runtime-skills/meeting-decision.md","sourceRefs":["agora/forge"],"tags":["decision"]},
+    {"id":"meeting-execution","title":"Execution","summary":"把卡点拆成 owner、依赖和下一步。","relativePath":"runtime-skills/meeting-execution.md","sourceRefs":["internal"],"tags":["execution"]},
+    {"id":"meeting-risk","title":"Risk","summary":"从失败路径、代价和副作用做预演。","relativePath":"runtime-skills/meeting-risk.md","sourceRefs":["agora/forge"],"tags":["risk"]},
+    {"id":"meeting-business","title":"Business","summary":"判断做出来有没有商业意义。","relativePath":"runtime-skills/meeting-business.md","sourceRefs":["skillcollection/ljg-invest","agora/bazaar"],"tags":["business"]},
+    {"id":"meeting-retrospective","title":"Retrospective","summary":"提炼可复用经验和失误模式。","relativePath":"runtime-skills/meeting-retrospective.md","sourceRefs":["internal"],"tags":["retro"]},
+    {"id":"meeting-synthesizer","title":"Synthesizer","summary":"去重冲突、收敛总评和下一步。","relativePath":"runtime-skills/meeting-synthesizer.md","sourceRefs":["skillcollection/ljg-writes","agora/atelier"],"tags":["synthesis"]},
+    {"id":"meeting-unit-economics","title":"Unit Economics","summary":"评估收入、成本和可持续性。","relativePath":"runtime-skills/meeting-unit-economics.md","sourceRefs":["agora/bazaar","skillcollection/market-sizing"],"tags":["business","unit-economics"]},
+    {"id":"meeting-moat","title":"Moat","summary":"检查优势是否可复利、可持续。","relativePath":"runtime-skills/meeting-moat.md","sourceRefs":["agora/bazaar"],"tags":["business","moat"]},
+    {"id":"meeting-five-whys","title":"Five Whys","summary":"沿着症状持续追问到根因。","relativePath":"runtime-skills/meeting-five-whys.md","sourceRefs":["internal"],"tags":["root-cause"]},
+    {"id":"meeting-pattern","title":"Pattern","summary":"抽取可复用的成功模式。","relativePath":"runtime-skills/meeting-pattern.md","sourceRefs":["internal"],"tags":["pattern"]},
+    {"id":"meeting-antipattern","title":"AntiPattern","summary":"指出正在重复出现的坏模式。","relativePath":"runtime-skills/meeting-antipattern.md","sourceRefs":["internal"],"tags":["antipattern"]},
+    {"id":"meeting-analogies","title":"Analogies","summary":"借相邻领域的类比打开发散。","relativePath":"runtime-skills/meeting-analogies.md","sourceRefs":["internal"],"tags":["analogy"]},
+    {"id":"meeting-divergence","title":"Divergence","summary":"在保持边界的前提下拉开新角度。","relativePath":"runtime-skills/meeting-divergence.md","sourceRefs":["agora/atelier"],"tags":["divergence"]}
+  ],
+  "agoraRooms": [
+    {"room":"forge","title":"Forge","summary":"适合需求澄清、方案评审和风险推演，重点打磨问题定义和方案强度。","relativePath":"agora-rooms/forge.md"},
+    {"room":"bazaar","title":"Bazaar","summary":"适合商业判断、资源配置和 ROI 讨论，重点检查价值闭环。","relativePath":"agora-rooms/bazaar.md"},
+    {"room":"atelier","title":"Atelier","summary":"适合发散、破冰和提词板，重点产出可直接接话的下一句。","relativePath":"agora-rooms/atelier.md"},
+    {"room":"clinic","title":"Clinic","summary":"适合低能量、复盘和心理阻滞，重点拆出真实阻滞点。","relativePath":"agora-rooms/clinic.md"},
+    {"room":"hearth","title":"Hearth","summary":"适合协作冲突和关系摩擦，重点修正协作接口与预期。","relativePath":"agora-rooms/hearth.md"},
+    {"room":"oracle","title":"Oracle","summary":"适合强方向判断和拍板场景，重点迫使团队给出明确选择。","relativePath":"agora-rooms/oracle.md"}
+  ]
+}

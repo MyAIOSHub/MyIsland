@@ -9,10 +9,23 @@
 /* Begin PBXBuildFile section */
 		FDA49F7D2EE11E3C00F9612E /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = FD33FD722EDF32D7002A6548 /* Markdown */; };
 		FDA49F7E2EE11E3C00F9612E /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FDA49F7F2EE11E3C00F9612E /* Sparkle */; };
+		FD44AA0C2F001001002A6548 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = FD33FD722EDF32D7002A6548 /* Markdown */; };
+		FD44AA0D2F001001002A6548 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FDA49F7F2EE11E3C00F9612E /* Sparkle */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FD44AA012F001001002A6548 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FD33FD552EDF32D7002A6548 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FD33FD5C2EDF32D7002A6548;
+			remoteInfo = MyIsland;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		FD33FD5D2EDF32D7002A6548 /* My Island.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "My Island.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD44AA022F001001002A6548 /* MyIslandTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MyIslandTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -34,6 +47,11 @@
 			path = MyIsland;
 			sourceTree = "<group>";
 		};
+		FD44AA032F001001002A6548 /* MyIslandTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MyIslandTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +64,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FD44AA042F001001002A6548 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FD44AA0C2F001001002A6548 /* Markdown in Frameworks */,
+				FD44AA0D2F001001002A6548 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -53,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				FD33FD5F2EDF32D7002A6548 /* MyIsland */,
+				FD44AA032F001001002A6548 /* MyIslandTests */,
 				FD33FD5E2EDF32D7002A6548 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -61,6 +89,7 @@
 			isa = PBXGroup;
 			children = (
 				FD33FD5D2EDF32D7002A6548 /* My Island.app */,
+				FD44AA022F001001002A6548 /* MyIslandTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -92,6 +121,31 @@
 			productReference = FD33FD5D2EDF32D7002A6548 /* My Island.app */;
 			productType = "com.apple.product-type.application";
 		};
+		FD44AA052F001001002A6548 /* MyIslandTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FD44AA0B2F001001002A6548 /* Build configuration list for PBXNativeTarget "MyIslandTests" */;
+			buildPhases = (
+				FD44AA072F001001002A6548 /* Sources */,
+				FD44AA042F001001002A6548 /* Frameworks */,
+				FD44AA062F001001002A6548 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FD44AA082F001001002A6548 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FD44AA032F001001002A6548 /* MyIslandTests */,
+			);
+			name = MyIslandTests;
+			packageProductDependencies = (
+				FD33FD722EDF32D7002A6548 /* Markdown */,
+				FDA49F7F2EE11E3C00F9612E /* Sparkle */,
+			);
+			productName = MyIslandTests;
+			productReference = FD44AA022F001001002A6548 /* MyIslandTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -104,6 +158,10 @@
 				TargetAttributes = {
 					FD33FD5C2EDF32D7002A6548 = {
 						CreatedOnToolsVersion = 26.1.1;
+					};
+					FD44AA052F001001002A6548 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = FD33FD5C2EDF32D7002A6548;
 					};
 				};
 			};
@@ -126,12 +184,20 @@
 			projectRoot = "";
 			targets = (
 				FD33FD5C2EDF32D7002A6548 /* MyIsland */,
+				FD44AA052F001001002A6548 /* MyIslandTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		FD33FD5B2EDF32D7002A6548 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FD44AA062F001001002A6548 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -148,7 +214,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FD44AA072F001001002A6548 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FD44AA082F001001002A6548 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FD33FD5C2EDF32D7002A6548 /* MyIsland */;
+			targetProxy = FD44AA012F001001002A6548 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		FD33FD662EDF32D8002A6548 /* Debug */ = {
@@ -341,6 +422,50 @@
 			};
 			name = Release;
 		};
+		FD44AA092F001001002A6548 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 10;
+				DEVELOPMENT_TEAM = 42PBUJ247D;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 1.4.3;
+				PRODUCT_BUNDLE_IDENTIFIER = app.myisland.macos.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/My Island.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/My Island";
+			};
+			name = Debug;
+		};
+		FD44AA0A2F001001002A6548 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 10;
+				DEVELOPMENT_TEAM = 42PBUJ247D;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 1.4.3;
+				PRODUCT_BUNDLE_IDENTIFIER = app.myisland.macos.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/My Island.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/My Island";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -358,6 +483,15 @@
 			buildConfigurations = (
 				FD33FD692EDF32D8002A6548 /* Debug */,
 				FD33FD6A2EDF32D8002A6548 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FD44AA0B2F001001002A6548 /* Build configuration list for PBXNativeTarget "MyIslandTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FD44AA092F001001002A6548 /* Debug */,
+				FD44AA0A2F001001002A6548 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

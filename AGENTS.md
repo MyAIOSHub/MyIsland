@@ -49,8 +49,57 @@ scripts/                     # Build and release scripts
 - **Build:** `xcodebuild -scheme MyIsland -configuration Release`
 - **Launch command:** `pkill -9 -f "My Island"; xattr -cr ~/Library/Developer/Xcode/DerivedData/MyIsland-*/Build/Products/Debug/My\ Island.app && open ~/Library/Developer/Xcode/DerivedData/MyIsland-*/Build/Products/Debug/My\ Island.app`
 
-@AGENTS.md
+## Skill-Driven Development (MUST FOLLOW)
 
-# Rule
+All non-trivial work MUST proactively adopt the installed skills and delegate execution to subagents. This is mandatory, not optional.
 
-1. 当你要写入内容到 Claude.md 时，写入对象变为 AGENTS.md
+### Installed Skill Plugins
+
+| Plugin | Key Skills |
+|--------|-----------|
+| **superpowers** | brainstorming, writing-plans, executing-plans, test-driven-development, systematic-debugging, subagent-driven-development, dispatching-parallel-agents, verification-before-completion, requesting-code-review, using-git-worktrees |
+| **compound-engineering** | ce:brainstorm, ce:plan, ce:work, ce:review, ce:debug, ce:compound, git-commit-push-pr, document-review, frontend-design, test-xcode |
+| **agent-skills** | spec-driven-development, planning-and-task-breakdown, incremental-implementation, test-driven-development, code-review-and-quality, debugging-and-error-recovery, security-and-hardening, performance-optimization, api-and-interface-design |
+
+### Workflow Rules
+
+1. **Requirement Analysis Phase** — When receiving a new feature or task:
+   - Invoke `superpowers:brainstorming` or `ce:brainstorm` to explore requirements before coding
+   - Invoke `superpowers:writing-plans` or `ce:plan` to produce a structured implementation plan
+   - For specs, invoke `agent-skills:spec-driven-development`
+
+2. **Execution Phase** — When implementing:
+   - **MUST use subagents** (Agent tool) to parallelize independent work streams
+   - Invoke `superpowers:subagent-driven-development` or `superpowers:dispatching-parallel-agents` to coordinate
+   - Each subagent should invoke the appropriate skill for its task:
+     - Coding → `superpowers:test-driven-development` or `agent-skills:incremental-implementation`
+     - Debugging → `superpowers:systematic-debugging` or `ce:debug`
+     - UI work → `compound-engineering:frontend-design` or `agent-skills:frontend-ui-engineering`
+     - API design → `agent-skills:api-and-interface-design`
+   - Use worktrees (`superpowers:using-git-worktrees`) for isolated parallel branches when appropriate
+
+3. **Verification Phase** — Before claiming completion:
+   - Invoke `superpowers:verification-before-completion` to run checks with evidence
+   - Invoke `superpowers:requesting-code-review` or `ce:review` for self-review
+   - Invoke `agent-skills:code-review-and-quality` via a subagent for independent review
+   - Invoke `agent-skills:security-and-hardening` if the change touches user input or external data
+
+4. **Shipping Phase** — When committing/PR:
+   - Use `compound-engineering:git-commit-push-pr` for commit + PR in one step
+   - Invoke `agent-skills:git-workflow-and-versioning` for branch management
+
+### Subagent Delegation Pattern
+
+```
+Main Agent (coordinator)
+  ├── Subagent A → skill: brainstorming / planning
+  ├── Subagent B → skill: test-driven-development (write tests)
+  ├── Subagent C → skill: incremental-implementation (write code)
+  ├── Subagent D → skill: code-review-and-quality (review)
+  └── Subagent E → skill: verification-before-completion (verify)
+```
+
+- Spawn subagents for ANY task that can run independently
+- Each subagent must invoke the Skill tool with the relevant skill name before starting its work
+- The main agent coordinates, reviews subagent output, and handles integration
+- Prefer parallel subagents over sequential execution whenever possible
