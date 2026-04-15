@@ -78,7 +78,7 @@ struct MeetingSettingsView: View {
             Text("当前实现跟随官方 v3 大模型流式协议，使用 `X-Api-App-Key / X-Api-Access-Key / X-Api-Resource-Id` 头。")
                 .font(DesignTokens.Font.caption())
                 .foregroundColor(DesignTokens.Text.tertiary)
-            Text("当前默认实时资源是 `volc.bigasr.sauc.concurrent`。说话人识别需要保持 Language 留空或 `zh-CN`，并依赖服务端实际返回 speaker 字段。")
+            Text("当前默认实时资源是 `volc.bigasr.sauc.duration`（会议长音频，多人区分能力更强）。说话人识别需保持 Language 留空或 `zh-CN`，并依赖服务端返回 speaker 字段；如果 AppID 未开通 duration，可在火山控制台申请后在此输入框覆盖。")
                 .font(DesignTokens.Font.caption())
                 .foregroundColor(DesignTokens.Text.tertiary)
             Text("如果看到 `quota exceeded for types: concurrency`，说明当前豆包流式并发额度不足，需要在火山控制台增购并发，或切换到你已开通的其他实时 resource ID。")

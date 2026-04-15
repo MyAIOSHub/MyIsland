@@ -39,6 +39,33 @@ final class MeetingCoordinator: ObservableObject {
     private var meetingStartThinkingTask: Task<Void, Never>?
     private var activeASRDiagnosticsURL: URL?
     private var silenceDetector = MeetingSilenceDetector()
+
+    // MARK: - Live transcript aggregation state
+    //
+    // Doubao streaming ASR emits segments at *word* granularity — each short
+    // fragment ("哈", "喽", "一", "二", …) arrives as its own `definite=true`
+    // utterance with its own start_time. Rendering each of those as a new
+    // transcript row produces the "token-by-token" UX the user complained
+    // about. We need to aggregate consecutive fragments from the same speaker
+    // into a single sentence row, closing the sentence only when:
+    //   • the speaker changes (implicit — each speaker has its own bucket),
+    //   • the silence gap since the last fragment exceeds `sentenceGapMs`, or
+    //   • the accumulated text ends with a sentence terminator (。！？.!?…).
+    private struct PendingSentence {
+        var rowID: String
+        var text: String
+        var startTimeMs: Int
+        var endTimeMs: Int
+        var speakerLabel: String
+        /// Last activity timestamp for gap detection. Tracks the latest
+        /// `endTimeMs` we've seen for this speaker's ongoing sentence.
+        var latestEndMs: Int
+    }
+    private var pendingSentenceBySpeaker: [String: PendingSentence] = [:]
+    private static let sentenceGapMs = 1_200
+    private static let sentenceTerminators: Set<Character> = [
+        "。", "！", "？", ".", "!", "?", "…"
+    ]
     private let transcriptLogEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -365,6 +392,7 @@ final class MeetingCoordinator: ObservableObject {
         audioInputModeError = nil
         realtimeASRState = .idle
         realtimeASRMessage = nil
+        pendingSentenceBySpeaker.removeAll(keepingCapacity: false)
 
         record.state = .processing
         record.endedAt = Date()
@@ -656,6 +684,7 @@ final class MeetingCoordinator: ObservableObject {
         silenceDetector.begin(at: record.createdAt)
         activeMeeting = record
         activeASRDiagnosticsURL = asrDiagnosticsURL
+        pendingSentenceBySpeaker.removeAll(keepingCapacity: true)
         try await resetASRDiagnosticsLog()
         try await persist(record: record, keepActiveMeeting: true, refreshRecentMeetings: true)
 
@@ -783,6 +812,119 @@ final class MeetingCoordinator: ObservableObject {
             try? await persist(record: record, keepActiveMeeting: false, refreshRecentMeetings: true)
         }
         activeMeeting = nil
+        pendingSentenceBySpeaker.removeAll(keepingCapacity: false)
+    }
+
+    // MARK: - Live segment aggregation
+
+    /// Collapses Doubao's word-level segments into one sentence row per
+    /// speaker. The server emits a stream of short `definite=true` utterances
+    /// (often 1–3 characters each) plus a growing `definite=false` hypothesis
+    /// of the active utterance; rendering each of those as its own transcript
+    /// row produces a token-by-token UX. This method rewrites the incoming
+    /// segment so that all fragments belonging to the same sentence share the
+    /// same row id, text, and time range. A new row is opened only when:
+    ///
+    ///   1. the speaker changes (each speaker has its own bucket),
+    ///   2. the gap since the last fragment > `sentenceGapMs`, or
+    ///   3. the accumulated text already ended with a sentence terminator.
+    ///
+    /// When the server omits `speaker_id`, unknown-speaker segments are still
+    /// aggregated under the `"speaker_unknown"` key so the UI falls back to
+    /// "说话人1" instead of the unnumbered "说话人".
+    private func normalizeSegmentForAggregation(_ segment: TranscriptSegment) -> TranscriptSegment {
+        var incoming = segment
+        if incoming.speakerLabel == nil {
+            incoming.speakerLabel = "speaker_unknown"
+        }
+        let speakerKey = incoming.speakerLabel ?? "speaker_unknown"
+
+        let shouldStartNew: Bool
+        if let pending = pendingSentenceBySpeaker[speakerKey] {
+            let gap = incoming.startTimeMs - pending.latestEndMs
+            let endsWithTerminator = pending.text.last
+                .map { Self.sentenceTerminators.contains($0) } ?? false
+            shouldStartNew = gap > Self.sentenceGapMs || endsWithTerminator
+        } else {
+            shouldStartNew = true
+        }
+
+        if shouldStartNew {
+            let fresh = PendingSentence(
+                rowID: incoming.id,
+                text: incoming.text,
+                startTimeMs: incoming.startTimeMs,
+                endTimeMs: incoming.endTimeMs,
+                speakerLabel: speakerKey,
+                latestEndMs: max(incoming.endTimeMs, incoming.startTimeMs)
+            )
+            pendingSentenceBySpeaker[speakerKey] = fresh
+            return incoming
+        }
+
+        // Merge into the pending sentence for this speaker.
+        var pending = pendingSentenceBySpeaker[speakerKey]!
+        pending.text = Self.mergeSentenceText(existing: pending.text, incoming: incoming.text)
+        pending.endTimeMs = max(pending.endTimeMs, incoming.endTimeMs)
+        pending.latestEndMs = max(pending.latestEndMs, incoming.endTimeMs)
+        pendingSentenceBySpeaker[speakerKey] = pending
+
+        // Rewrite the outgoing segment so the ingest loop upserts into the
+        // same transcript row as all other fragments of this sentence.
+        incoming.id = pending.rowID
+        incoming.text = pending.text
+        incoming.startTimeMs = pending.startTimeMs
+        incoming.endTimeMs = pending.endTimeMs
+        return incoming
+    }
+
+    /// Decides how to combine an incoming text fragment with the existing
+    /// pending-sentence text. Handles three cases:
+    ///
+    /// 1. The incoming text is a *refinement* of the pending text (common
+    ///    when the server re-emits a growing hypothesis): if the incoming
+    ///    starts with the pending text or shares a sufficient prefix AND is
+    ///    longer, it *replaces* the pending text.
+    /// 2. The pending text already contains the incoming text as a suffix:
+    ///    return pending unchanged to avoid double-appending.
+    /// 3. Otherwise append, inserting a space only when needed for Latin
+    ///    scripts (CJK adjacency does not require spacing).
+    private static func mergeSentenceText(existing: String, incoming: String) -> String {
+        guard !incoming.isEmpty else { return existing }
+        guard !existing.isEmpty else { return incoming }
+
+        if incoming.count > existing.count,
+           incoming.hasPrefix(existing) {
+            return incoming
+        }
+        if existing.hasSuffix(incoming) || existing.contains(incoming) {
+            return existing
+        }
+
+        // Share a 2+ character prefix AND incoming is longer → treat as
+        // refined hypothesis replacing prior partial.
+        if incoming.count > existing.count {
+            let commonPrefixLength = zip(existing, incoming)
+                .prefix(while: { $0 == $1 }).count
+            if commonPrefixLength >= 2 {
+                return incoming
+            }
+        }
+
+        let needsSpace: Bool = {
+            guard let lastExisting = existing.last,
+                  let firstIncoming = incoming.first else { return false }
+            return !isCJK(lastExisting) && !isCJK(firstIncoming)
+        }()
+        return existing + (needsSpace ? " " : "") + incoming
+    }
+
+    private static func isCJK(_ character: Character) -> Bool {
+        character.unicodeScalars.contains { scalar in
+            (0x4E00...0x9FFF).contains(scalar.value) ||
+                (0x3040...0x30FF).contains(scalar.value) ||
+                (0xAC00...0xD7AF).contains(scalar.value)
+        }
     }
 
     private func scheduleMeetingStartThinking() {
@@ -798,7 +940,13 @@ final class MeetingCoordinator: ObservableObject {
         guard var record = activeMeeting else { return }
 
         var changed = false
-        for segment in segments {
+        for rawSegment in segments {
+            // Collapse incremental partials into a single ongoing row per speaker.
+            // Without this, each ASR frame (definite=false) creates a new row
+            // because the fallback segment id embeds `start_time`, which changes
+            // between partials.
+            let segment = normalizeSegmentForAggregation(rawSegment)
+
             if let transcriptIndex = record.transcript.firstIndex(where: { $0.id == segment.id }) {
                 if record.transcript[transcriptIndex] != segment {
                     record.transcript[transcriptIndex] = segment

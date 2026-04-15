@@ -6,7 +6,12 @@ final class MeetingSettingsStore: ObservableObject {
     static let shared = MeetingSettingsStore()
 
     private enum StreamingDefaults {
-        static let recommendedResourceID = "volc.bigasr.sauc.concurrent"
+        // Meeting-oriented long-audio resource: better multi-speaker diarization
+        // than the generic `concurrent` tier. The `concurrent` resource often
+        // returns the same speaker_id for every utterance in a mono-mixed
+        // stream, which is the root cause of "all rows shown as 说话人1".
+        static let recommendedResourceID = "volc.bigasr.sauc.duration"
+        static let legacyConcurrentResourceID = "volc.bigasr.sauc.concurrent"
         static let unsupportedResourceID = "volc.seedasr.sauc.concurrent"
     }
 
@@ -196,6 +201,12 @@ final class MeetingSettingsStore: ObservableObject {
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !trimmed.isEmpty else { return StreamingDefaults.recommendedResourceID }
         if trimmed == StreamingDefaults.unsupportedResourceID {
+            return StreamingDefaults.recommendedResourceID
+        }
+        // One-time migration: users previously on the `concurrent` tier get
+        // upgraded to `duration` for better speaker diarization. Users who
+        // explicitly need `concurrent` can set it again from the settings UI.
+        if trimmed == StreamingDefaults.legacyConcurrentResourceID {
             return StreamingDefaults.recommendedResourceID
         }
         return trimmed
