@@ -132,6 +132,27 @@ final class MeetingPostProcessingEngine {
             await buildFallbackSummary(updated: &updated, agentConfig: agentConfig)
         }
 
+        // Always run the LLM augmentation pass when the agent is
+        // configured, even if Memo gave a strong summary. Memo never
+        // produces decisions or per-speaker viewpoints, so this pass is
+        // the only path that fills those fields. The augmentor is
+        // additive and won't overwrite Memo's existing chapter/action/QA
+        // content.
+        if let summaryBundle = updated.summaryBundle,
+           agentConfig.isConfigured,
+           !updated.transcript.isEmpty {
+            do {
+                updated.summaryBundle = try await MeetingSummaryEngine.shared.augmentSummary(
+                    existing: summaryBundle,
+                    transcript: updated.transcript,
+                    topic: updated.topic,
+                    config: agentConfig
+                )
+            } catch {
+                updated.notes.append("LLM 增强（决策 / 观点）失败，保留原版总结：\(error.localizedDescription)")
+            }
+        }
+
         if let summaryBundle = updated.summaryBundle,
            !updated.annotations.isEmpty,
            agentConfig.isConfigured {

@@ -197,6 +197,28 @@ final class MeetingSettingsStore: ObservableObject {
         agentMaxVisibleViewpoints = storedMaxVisibleViewpoints ?? 3
     }
 
+    /// Pick the first non-empty source for a config value: stored prefs →
+    /// process environment → hard-coded fallback. Used so secrets like the
+    /// LLM API key can be supplied via env var instead of UserDefaults.
+    private nonisolated static func resolve(
+        stored: String,
+        envKey: String,
+        fallback: String
+    ) -> String {
+        let whitespace = CharacterSet.whitespacesAndNewlines
+        let trimmedStored = stored.trimmingCharacters(in: whitespace)
+        if !trimmedStored.isEmpty { return trimmedStored }
+        // Project also defines `ProcessInfo` (in Services/Shared) which
+        // shadows Foundation's; use the fully-qualified name to reach the
+        // OS singleton.
+        let env = Foundation.ProcessInfo.processInfo.environment
+        if let envValue = env[envKey] {
+            let trimmedEnv = envValue.trimmingCharacters(in: whitespace)
+            if !trimmedEnv.isEmpty { return trimmedEnv }
+        }
+        return fallback
+    }
+
     private static func normalizedStreamingResourceID(_ value: String?) -> String {
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !trimmed.isEmpty else { return StreamingDefaults.recommendedResourceID }
@@ -250,10 +272,37 @@ final class MeetingSettingsStore: ObservableObject {
     }
 
     var agentModelConfig: MeetingAgentModelConfig {
-        MeetingAgentModelConfig(
-            baseURL: agentBaseURL.trimmingCharacters(in: .whitespacesAndNewlines),
-            apiKey: agentAPIKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            model: agentModel.trimmingCharacters(in: .whitespacesAndNewlines),
+        // Resolve each field with this priority order:
+        //   1. UserDefaults (the value the user typed in the settings UI)
+        //   2. Environment variable (so secrets — especially the API key —
+        //      can stay out of source control and out of the prefs plist)
+        //   3. Hard-coded default (Ark Doubao endpoint + the model the user
+        //      asked us to wire as the LLM fallback)
+        //
+        // This means: if the user wants to ship without storing the key on
+        // disk at all, they can leave the API Key field blank in Settings
+        // and export `MEETING_AGENT_API_KEY` in the shell or in the Xcode
+        // scheme's "Environment Variables" section.
+        let resolvedBaseURL = Self.resolve(
+            stored: agentBaseURL,
+            envKey: "MEETING_AGENT_BASE_URL",
+            fallback: "https://ark.cn-beijing.volces.com/api/v3"
+        )
+        let resolvedAPIKey = Self.resolve(
+            stored: agentAPIKey,
+            envKey: "MEETING_AGENT_API_KEY",
+            fallback: ""
+        )
+        let resolvedModel = Self.resolve(
+            stored: agentModel,
+            envKey: "MEETING_AGENT_MODEL",
+            fallback: "doubao-1-5-pro-32k-250115"
+        )
+
+        return MeetingAgentModelConfig(
+            baseURL: resolvedBaseURL,
+            apiKey: resolvedAPIKey,
+            model: resolvedModel,
             temperature: agentTemperature,
             systemPrompt: agentSystemPrompt
         )

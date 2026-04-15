@@ -623,12 +623,69 @@ struct MeetingQAPair: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
+struct MeetingDecision: Codable, Equatable, Identifiable, Sendable {
+    var id: UUID
+    /// One-sentence statement of what was decided.
+    var statement: String
+    /// Optional rationale / context that produced the decision.
+    var rationale: String?
+    /// Speaker label (display name) credited with proposing or confirming
+    /// the decision. nil when not attributable to a specific person.
+    var decidedBy: String?
+    /// Original timecode in milliseconds where the decision crystallised,
+    /// used to deep-link back into the transcript.
+    var timecodeMs: Int?
+
+    init(
+        id: UUID = UUID(),
+        statement: String,
+        rationale: String? = nil,
+        decidedBy: String? = nil,
+        timecodeMs: Int? = nil
+    ) {
+        self.id = id
+        self.statement = statement
+        self.rationale = rationale
+        self.decidedBy = decidedBy
+        self.timecodeMs = timecodeMs
+    }
+}
+
+struct MeetingSpeakerViewpoint: Codable, Equatable, Identifiable, Sendable {
+    var id: UUID
+    /// Display name (e.g. "说话人1") — keyed against the resolver's mapping.
+    var speakerLabel: String
+    /// 1-3 short bullet-style points capturing this speaker's stance /
+    /// contribution to the meeting.
+    var points: [String]
+    /// Optional one-line summary of the speaker's overall position.
+    var stance: String?
+
+    init(
+        id: UUID = UUID(),
+        speakerLabel: String,
+        points: [String] = [],
+        stance: String? = nil
+    ) {
+        self.id = id
+        self.speakerLabel = speakerLabel
+        self.points = points
+        self.stance = stance
+    }
+}
+
 struct MeetingSummaryBundle: Codable, Equatable, Sendable {
     var fullSummary: String
     var chapterSummaries: [MeetingChapterSummary]
     var actionItems: [MeetingActionItem]
     var qaPairs: [MeetingQAPair]
     var processHighlights: [String]
+    /// Decisions extracted from the meeting. Empty when neither the Memo
+    /// pipeline nor the LLM enhancement pass produced anything (or when
+    /// the LLM is not configured).
+    var decisions: [MeetingDecision]
+    /// Per-speaker viewpoint summaries. Empty by the same logic.
+    var speakerViewpoints: [MeetingSpeakerViewpoint]
     var source: String
 
     init(
@@ -637,6 +694,8 @@ struct MeetingSummaryBundle: Codable, Equatable, Sendable {
         actionItems: [MeetingActionItem] = [],
         qaPairs: [MeetingQAPair] = [],
         processHighlights: [String] = [],
+        decisions: [MeetingDecision] = [],
+        speakerViewpoints: [MeetingSpeakerViewpoint] = [],
         source: String = "memo"
     ) {
         self.fullSummary = fullSummary
@@ -644,7 +703,29 @@ struct MeetingSummaryBundle: Codable, Equatable, Sendable {
         self.actionItems = actionItems
         self.qaPairs = qaPairs
         self.processHighlights = processHighlights
+        self.decisions = decisions
+        self.speakerViewpoints = speakerViewpoints
         self.source = source
+    }
+
+    // Backward-compatible decoding: old archived records won't contain
+    // `decisions` / `speakerViewpoints` and would otherwise fail to
+    // decode.
+    enum CodingKeys: String, CodingKey {
+        case fullSummary, chapterSummaries, actionItems, qaPairs,
+             processHighlights, decisions, speakerViewpoints, source
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.fullSummary       = try c.decodeIfPresent(String.self, forKey: .fullSummary) ?? ""
+        self.chapterSummaries  = try c.decodeIfPresent([MeetingChapterSummary].self, forKey: .chapterSummaries) ?? []
+        self.actionItems       = try c.decodeIfPresent([MeetingActionItem].self, forKey: .actionItems) ?? []
+        self.qaPairs           = try c.decodeIfPresent([MeetingQAPair].self, forKey: .qaPairs) ?? []
+        self.processHighlights = try c.decodeIfPresent([String].self, forKey: .processHighlights) ?? []
+        self.decisions         = try c.decodeIfPresent([MeetingDecision].self, forKey: .decisions) ?? []
+        self.speakerViewpoints = try c.decodeIfPresent([MeetingSpeakerViewpoint].self, forKey: .speakerViewpoints) ?? []
+        self.source            = try c.decodeIfPresent(String.self, forKey: .source) ?? "memo"
     }
 }
 

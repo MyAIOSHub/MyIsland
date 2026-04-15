@@ -18,11 +18,13 @@ struct MeetingDetailView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                 header
                 summarySection
+                decisionsSection
                 focusSection
                 noteSection
                 actionSection
                 postMeetingAdviceSection
                 qaSection
+                speakerViewpointsSection
                 speakerSection
                 transcriptSection
             }
@@ -126,6 +128,88 @@ struct MeetingDetailView: View {
             RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
                 .fill(DesignTokens.Surface.base)
         )
+    }
+
+    /// Decisions extracted by the LLM augmentation pass. Hidden entirely
+    /// when none — Memo never produces decisions, and an empty card just
+    /// adds visual noise when the user hasn't configured a model.
+    @ViewBuilder
+    private var decisionsSection: some View {
+        if let decisions = resolvedRecord.summaryBundle?.decisions, !decisions.isEmpty {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                Text("决策")
+                    .font(DesignTokens.Font.heading())
+                    .foregroundColor(DesignTokens.Text.primary)
+
+                ForEach(decisions) { decision in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(decision.statement)
+                            .font(DesignTokens.Font.label())
+                            .foregroundColor(DesignTokens.Text.primary)
+                        if let rationale = decision.rationale, !rationale.isEmpty {
+                            Text(rationale)
+                                .font(DesignTokens.Font.body())
+                                .foregroundColor(DesignTokens.Text.secondary)
+                        }
+                        let meta = [
+                            decision.decidedBy,
+                            decision.timecodeMs.map { MeetingLiveTimeline.timecode(milliseconds: $0) }
+                        ].compactMap { $0 }.joined(separator: " · ")
+                        if !meta.isEmpty {
+                            Text(meta)
+                                .font(DesignTokens.Font.caption())
+                                .foregroundColor(DesignTokens.Text.tertiary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 4)
+                }
+            }
+            .padding(DesignTokens.Spacing.md)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
+                    .fill(DesignTokens.Surface.base)
+            )
+        }
+    }
+
+    /// Per-speaker viewpoint summaries from the LLM augmentation pass.
+    /// Hidden when the LLM did not produce any (e.g. agent unconfigured,
+    /// or every speaker just exchanged greetings).
+    @ViewBuilder
+    private var speakerViewpointsSection: some View {
+        if let viewpoints = resolvedRecord.summaryBundle?.speakerViewpoints, !viewpoints.isEmpty {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                Text("各说话人观点")
+                    .font(DesignTokens.Font.heading())
+                    .foregroundColor(DesignTokens.Text.primary)
+
+                ForEach(viewpoints) { viewpoint in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(viewpoint.speakerLabel)
+                            .font(DesignTokens.Font.label())
+                            .foregroundColor(DesignTokens.Text.primary)
+                        if let stance = viewpoint.stance, !stance.isEmpty {
+                            Text(stance)
+                                .font(DesignTokens.Font.body())
+                                .foregroundColor(DesignTokens.Text.secondary)
+                        }
+                        ForEach(Array(viewpoint.points.enumerated()), id: \.offset) { _, point in
+                            Text("• \(point)")
+                                .font(DesignTokens.Font.body())
+                                .foregroundColor(DesignTokens.Text.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 4)
+                }
+            }
+            .padding(DesignTokens.Spacing.md)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
+                    .fill(DesignTokens.Surface.base)
+            )
+        }
     }
 
     private var actionSection: some View {

@@ -9,6 +9,8 @@ actor MeetingSummaryEngine {
         let actionItems: [ActionResponse]?
         let qaPairs: [QAResponse]?
         let processHighlights: [String]?
+        let decisions: [DecisionResponse]?
+        let speakerViewpoints: [SpeakerViewpointResponse]?
     }
 
     struct ChapterResponse: Decodable {
@@ -25,6 +27,19 @@ actor MeetingSummaryEngine {
     struct QAResponse: Decodable {
         let question: String
         let answer: String
+    }
+
+    struct DecisionResponse: Decodable {
+        let statement: String
+        let rationale: String?
+        let decidedBy: String?
+        let timecodeMs: Int?
+    }
+
+    struct SpeakerViewpointResponse: Decodable {
+        let speakerLabel: String
+        let stance: String?
+        let points: [String]?
     }
 
     func buildSummary(
@@ -72,6 +87,130 @@ actor MeetingSummaryEngine {
         )
 
         return decodeSummaryBundle(from: response, source: "agent-fallback")
+    }
+
+    /// Run an LLM enhancement pass on top of an existing (likely Memo-derived)
+    /// summary, filling in fields that Memo did not produce — most
+    /// importantly **decisions** and **per-speaker viewpoints**, which
+    /// Miaoji's pipeline does not extract at all. Also opportunistically
+    /// fills in chapter / action / Q&A / process-highlight slots when the
+    /// Memo pass left them empty.
+    ///
+    /// The pass is *additive* by design: existing Memo fields are passed
+    /// in as authoritative context, and the LLM is instructed not to
+    /// overwrite them. We then merge the LLM output back into a single
+    /// bundle, preferring the original Memo content for any field that
+    /// Memo provided.
+    func augmentSummary(
+        existing: MeetingSummaryBundle,
+        transcript: [TranscriptSegment],
+        topic: String,
+        config: MeetingAgentModelConfig
+    ) async throws -> MeetingSummaryBundle {
+        let speakerDisplayMap = MeetingSpeakerLabelResolver.displayMap(transcript: transcript)
+        let knownSpeakers = Array(Set(speakerDisplayMap.values)).sorted()
+        let speakersHint = knownSpeakers.isEmpty
+            ? "（暂无可识别的说话人标签）"
+            : knownSpeakers.joined(separator: "、")
+
+        let transcriptBody = transcript.prefix(800).map { segment in
+            let speaker = MeetingSpeakerLabelResolver.displayName(
+                for: segment.speakerLabel,
+                mapping: speakerDisplayMap
+            )
+            let timecode = MeetingLiveTimeline.timecode(milliseconds: segment.startTimeMs)
+            return "[\(timecode)][\(speaker)] \(segment.text)"
+        }.joined(separator: "\n")
+
+        let chapterText = existing.chapterSummaries
+            .map { "\($0.title)：\($0.summary)" }
+            .joined(separator: "；")
+        let actionText = existing.actionItems
+            .map { item in
+                [item.task, item.owner, item.dueDate]
+                    .compactMap { $0 }
+                    .joined(separator: " / ")
+            }
+            .joined(separator: "；")
+        let qaText = existing.qaPairs
+            .map { "\($0.question) -> \($0.answer)" }
+            .joined(separator: "；")
+        let processText = existing.processHighlights.joined(separator: "；")
+
+        let userPrompt = """
+        你是一名资深会议记录员。基于下面的会议转写，输出一份补全后的结构化纪要。
+        妙记 ASR 已经给出了一部分内容（见“现有总结”），你的工作是：
+
+        1. 抽取**决策(decisions)**：会议中明确达成的结论、共识、定论、行动方向。
+           - 每条决策一句话陈述（`statement`），越具体越好。
+           - 如果该决策的提出/拍板者明确，写入 `decidedBy`（用现有说话人标签，如“说话人1”）。
+           - 如果该决策的背景/原因清晰，写入 `rationale`。
+           - 如果决策出现在转写的某个时间点附近，写入 `timecodeMs`（毫秒）。
+           - **没有真正决策时返回空数组**。不要把单纯的讨论或观点当成决策。
+
+        2. 抽取**按发言人维度的观点总结(speakerViewpoints)**：
+           - 对每个 `speakersHint` 中出现过的说话人各产出一组观点：
+             - `speakerLabel` 必须严格用 `speakersHint` 里的中文标签（如“说话人1”），不要自创名字。
+             - `points` 1-3 条，每条 ≤ 30 字，捕捉这位说话人核心立场/贡献。
+             - `stance` 一句话概括这位说话人的整体取向（可为 null）。
+           - 如果某说话人只是寒暄/附和、没有可识别立场，跳过他。
+
+        3. 当现有总结里 `chapterSummaries` / `actionItems` / `qaPairs` / `processHighlights`
+           **为空**时，再尝试基于转写补足；如果现有总结已有内容，**保留为空数组让调用方用现有值合并**，避免覆盖。
+           - chapterSummaries 最多 4 项，actionItems 最多 8 项，qaPairs 最多 5 项。
+
+        4. fullSummary 字段：如现有总结已有非空内容，**返回空字符串**，调用方会保留原版；
+           只有原始为空时才生成（≤ 200 字，markdown 列表结构）。
+
+        会议主题：\(topic)
+        已知说话人：\(speakersHint)
+
+        现有总结（作为权威背景，不要覆写非空字段）：
+        - fullSummary：\(existing.fullSummary.isEmpty ? "无" : existing.fullSummary)
+        - chapterSummaries：\(chapterText.isEmpty ? "无" : chapterText)
+        - actionItems：\(actionText.isEmpty ? "无" : actionText)
+        - qaPairs：\(qaText.isEmpty ? "无" : qaText)
+        - processHighlights：\(processText.isEmpty ? "无" : processText)
+
+        会议转写（最多 800 段，每段格式 `[时:分:秒][说话人] 内容`）：
+        \(transcriptBody)
+
+        只返回合法 JSON，不要 markdown code fence：
+        {
+          "fullSummary": "string",
+          "chapterSummaries": [{"title":"string","summary":"string"}],
+          "actionItems": [{"task":"string","owner":"string|null","dueDate":"string|null"}],
+          "qaPairs": [{"question":"string","answer":"string"}],
+          "processHighlights": ["string"],
+          "decisions": [{"statement":"string","rationale":"string|null","decidedBy":"string|null","timecodeMs":number|null}],
+          "speakerViewpoints": [{"speakerLabel":"string","stance":"string|null","points":["string"]}]
+        }
+        """
+
+        let response = try await MeetingOpenAIModelClient.shared.complete(
+            messages: [
+                ["role": "system", "content": config.systemPrompt],
+                ["role": "user", "content": userPrompt]
+            ],
+            config: config,
+            responseFormat: ["type": "json_object"]
+        )
+
+        let llm = decodeSummaryBundle(from: response, source: "agent-augment")
+
+        // Merge: keep existing Memo fields when they have content, otherwise
+        // accept the LLM's. New fields (decisions / speakerViewpoints)
+        // always come from the LLM since Memo doesn't produce them.
+        return MeetingSummaryBundle(
+            fullSummary:       existing.fullSummary.isEmpty ? llm.fullSummary : existing.fullSummary,
+            chapterSummaries:  existing.chapterSummaries.isEmpty ? llm.chapterSummaries : existing.chapterSummaries,
+            actionItems:       existing.actionItems.isEmpty ? llm.actionItems : existing.actionItems,
+            qaPairs:           existing.qaPairs.isEmpty ? llm.qaPairs : existing.qaPairs,
+            processHighlights: existing.processHighlights.isEmpty ? llm.processHighlights : existing.processHighlights,
+            decisions:         llm.decisions,
+            speakerViewpoints: llm.speakerViewpoints,
+            source:            existing.source.isEmpty ? "agent-augment" : "\(existing.source)+agent-augment"
+        )
     }
 
     func refineSummary(
@@ -176,6 +315,15 @@ actor MeetingSummaryEngine {
         if refined.processHighlights.isEmpty {
             refined.processHighlights = summaryBundle.processHighlights
         }
+        // The refine prompt does not touch decisions / speakerViewpoints,
+        // so always carry the augment-pass output forward instead of
+        // accidentally clearing it.
+        if refined.decisions.isEmpty {
+            refined.decisions = summaryBundle.decisions
+        }
+        if refined.speakerViewpoints.isEmpty {
+            refined.speakerViewpoints = summaryBundle.speakerViewpoints
+        }
         return refined
     }
 
@@ -207,6 +355,21 @@ actor MeetingSummaryEngine {
                     MeetingQAPair(question: $0.question, answer: $0.answer)
                 },
                 processHighlights: decoded.processHighlights ?? [],
+                decisions: (decoded.decisions ?? []).map {
+                    MeetingDecision(
+                        statement: $0.statement,
+                        rationale: $0.rationale,
+                        decidedBy: $0.decidedBy,
+                        timecodeMs: $0.timecodeMs
+                    )
+                },
+                speakerViewpoints: (decoded.speakerViewpoints ?? []).map {
+                    MeetingSpeakerViewpoint(
+                        speakerLabel: $0.speakerLabel,
+                        points: $0.points ?? [],
+                        stance: $0.stance
+                    )
+                },
                 source: source
             )
         } catch {
