@@ -85,6 +85,13 @@ final class MeetingCoordinator: ObservableObject {
         await reloadInstalledSkills()
         await reloadUserSubagents()
 
+        // Re-register reminders for every meeting that's still in the
+        // .scheduled state. This handles the cold-start case where the user
+        // opened My Island after rebooting — pending Timer objects would
+        // otherwise be lost.
+        MeetingScheduleReminder.shared.requestNotificationAuthorizationIfNeeded()
+        MeetingScheduleReminder.shared.reconcile(with: recentMeetings)
+
         let cached = await MeetingSkillCatalogService.shared.cachedCatalog()
         catalogEntries = cached
         if cached.isEmpty {
@@ -287,6 +294,7 @@ final class MeetingCoordinator: ObservableObject {
             var record = try await MeetingStorage.shared.createMeeting(config: effectiveConfig)
             record = await syncCalendar(record: record)
             try await persist(record: record, keepActiveMeeting: false, refreshRecentMeetings: true)
+            MeetingScheduleReminder.shared.register(meeting: record)
             if record.calendarSyncState == .synced || !record.calendarSyncEnabled {
                 lastOperationError = nil
             }
@@ -316,6 +324,9 @@ final class MeetingCoordinator: ObservableObject {
 
         do {
             try await persist(record: record, keepActiveMeeting: false, refreshRecentMeetings: true)
+            // Re-register reminders to pick up the new scheduledAt — the
+            // helper internally cancels the previous timers first.
+            MeetingScheduleReminder.shared.register(meeting: record)
             if record.calendarSyncState == .synced || !record.calendarSyncEnabled {
                 lastOperationError = nil
             }
@@ -327,6 +338,7 @@ final class MeetingCoordinator: ObservableObject {
     func deleteScheduledMeeting(id: String) async {
         guard let record = await MeetingStorage.shared.meeting(id: id) else { return }
         await MeetingCalendarService.shared.remove(eventIdentifier: record.calendarEventIdentifier)
+        MeetingScheduleReminder.shared.cancel(meetingID: id)
         do {
             try await MeetingStorage.shared.deleteMeeting(id: id)
             await reloadMeetings()
@@ -339,6 +351,10 @@ final class MeetingCoordinator: ObservableObject {
     func startScheduledMeeting(id: String) async {
         guard var record = await MeetingStorage.shared.meeting(id: id) else { return }
         guard record.state == .scheduled else { return }
+
+        // Once the user actually starts recording, suppress any pending
+        // reminders for this meeting — they'd be noise after the fact.
+        MeetingScheduleReminder.shared.cancel(meetingID: id)
 
         resetLiveSessionState()
 

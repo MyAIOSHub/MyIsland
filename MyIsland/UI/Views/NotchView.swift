@@ -256,6 +256,19 @@ struct NotchView: View {
                 viewModel.notchOpen(reason: .notification)
             }
         }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: MeetingScheduleReminder.meetingReminderFiredNotification
+            )
+        ) { _ in
+            // Bring the meeting hub forward so the upcoming meeting (with its
+            // "开始" / "稍后" actions) is one tap away. We don't auto-start
+            // recording — the user should confirm they're ready.
+            viewModel.contentType = .meetingHub
+            if viewModel.status == .closed {
+                viewModel.notchOpen(reason: .notification)
+            }
+        }
     }
 
     // MARK: - Notch Layout
