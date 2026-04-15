@@ -165,6 +165,18 @@ actor MeetingMemoClient {
                 ]
             ],
             "Params": [
+                // Per https://www.volcengine.com/docs/6561/1798094 every
+                // extraction pipeline must be enabled explicitly with its
+                // own toggle + Types list:
+                //   • 全文总结  → SummarizationEnabled + Types ⊇ ["summary"]
+                //   • 章节总结  → ChapterEnabled
+                //   • 待办提取  → InformationExtractionEnabled + Types ⊇ ["todo_list"]
+                //   • 问答提取  → InformationExtractionEnabled + Types ⊇ ["question_answer"]
+                // AllActivate is left as `false` so the explicit per-feature
+                // settings drive the behaviour (the official docs prescribe
+                // the granular toggles, and combining AllActivate=true with
+                // a Types list has caused unexpected pipeline behaviour in
+                // practice).
                 "AllActivate": false,
                 "SourceLang": "zh_cn",
                 "AudioTranscriptionEnable": true,
@@ -363,16 +375,35 @@ actor MeetingMemoClient {
 
     private static func extractSummaryText(from payload: [String: Any]?) -> String? {
         guard let payload else { return nil }
+        // The Doubao Miaoji `SummarizationFile` payload actually serialises
+        // its long-form summary under `paragraph` (with a peer `title`),
+        // not any of the legacy keys we used to look up. Putting `paragraph`
+        // first restores the real summary; the other names remain as
+        // safety nets for older/alternate response shapes.
         return extractString(
             from: payload,
             keys: [
+                "paragraph",
                 "full_summary",
                 "summary",
                 "abstract",
                 "overall_summary",
                 "summary_text",
-                "overallSummary"
+                "overallSummary",
+                "content",
+                "text"
             ]
+        )
+    }
+
+    /// Optional auto-generated meeting title. Populated by Miaoji's
+    /// SummarizationFile alongside `paragraph`. Surfaced so callers can
+    /// suggest a better title than "未命名会议" for unnamed meetings.
+    static func extractMeetingTitle(from payload: [String: Any]?) -> String? {
+        guard let payload else { return nil }
+        return extractString(
+            from: payload,
+            keys: ["title", "topic", "subject", "headline"]
         )
     }
 
