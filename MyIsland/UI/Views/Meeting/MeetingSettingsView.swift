@@ -9,6 +9,8 @@ struct MeetingSettingsView: View {
     @State private var editorSheet: MeetingSkillLibraryEditorSheet?
     @State private var importRepoURL = ""
     @State private var isImportingRepo = false
+    @State private var isReparsingMemoSummaries = false
+    @State private var lastReparseStatsMessage: String?
 
     private var catalogGroups: [MeetingCatalogSubagentGroup] {
         MeetingSkillCatalogService.catalogSubagentGroups(
@@ -39,6 +41,7 @@ struct MeetingSettingsView: View {
                 objectStorageSection
                 agentSection
                 skillLibrarySection
+                maintenanceSection
             }
             .padding(DesignTokens.Spacing.md)
         }
@@ -146,6 +149,46 @@ struct MeetingSettingsView: View {
             Text("运行时会优先调用项目内置的 normalized meeting skills、vendored agora0411 和 skillcollection 快照。")
                 .font(DesignTokens.Font.caption())
                 .foregroundColor(DesignTokens.Text.tertiary)
+        }
+    }
+
+    private var maintenanceSection: some View {
+        MeetingSettingsCard(title: "维护") {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                HStack {
+                    Button {
+                        Task {
+                            isReparsingMemoSummaries = true
+                            let stats = await coordinator.reparseStoredMemoSummaries()
+                            isReparsingMemoSummaries = false
+                            lastReparseStatsMessage =
+                                "扫描 \(stats.attempted) 场会议 — 已修正 \(stats.refreshed) 场，未变 \(stats.skippedUnchanged) 场，无原始数据 \(stats.skippedNoPayload) 场，失败 \(stats.failed) 场。"
+                        }
+                    } label: {
+                        Text(isReparsingMemoSummaries ? "重新解析中…" : "重新解析历史会议总结")
+                            .font(DesignTokens.Font.caption())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule().fill(isReparsingMemoSummaries ? Color.gray : TerminalColors.blue)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isReparsingMemoSummaries)
+                    Spacer()
+                }
+
+                Text("用最新的 parser 重新读取每场会议磁盘上保存的妙记 payload，把因旧 bug 丢失的全文总结 / 章节 / 待办字段补回去。无需重新上传音频。")
+                    .font(DesignTokens.Font.caption())
+                    .foregroundColor(DesignTokens.Text.tertiary)
+
+                if let message = lastReparseStatsMessage {
+                    Text(message)
+                        .font(DesignTokens.Font.caption())
+                        .foregroundColor(DesignTokens.Text.secondary)
+                }
+            }
         }
     }
 

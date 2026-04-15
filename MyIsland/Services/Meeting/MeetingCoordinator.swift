@@ -117,6 +117,88 @@ final class MeetingCoordinator: ObservableObject {
         lastOperationError = nil
     }
 
+    // MARK: - Reparse cached Memo payloads
+    //
+    // For every completed meeting we already wrote the four raw Miaoji
+    // payloads to disk (`memo-{transcription,chapter,information,summary}-payload.json`).
+    // A parser bug used to drop the real `paragraph` summary and silently
+    // substitute transcript fragments. Now that the parser is fixed, this
+    // helper re-runs `MeetingMemoClient.buildArtifact` over the cached files
+    // and rewrites `record.summaryBundle` so historical records pick up the
+    // proper structured output without re-hitting the API or re-uploading
+    // the audio.
+
+    struct ReparseStats {
+        var attempted: Int = 0
+        var refreshed: Int = 0
+        var skippedNoPayload: Int = 0
+        var skippedUnchanged: Int = 0
+        var failed: Int = 0
+    }
+
+    func reparseStoredMemoSummaries() async -> ReparseStats {
+        var stats = ReparseStats()
+        let allMeetings = await MeetingStorage.shared.allMeetings()
+
+        for record in allMeetings {
+            stats.attempted += 1
+            do {
+                let directory: URL
+                do {
+                    directory = try await MeetingStorage.shared.meetingDirectory(meetingID: record.id)
+                } catch {
+                    stats.failed += 1
+                    continue
+                }
+
+                let summaryURL = directory.appendingPathComponent("memo-summary-payload.json")
+                guard FileManager.default.fileExists(atPath: summaryURL.path) else {
+                    stats.skippedNoPayload += 1
+                    continue
+                }
+
+                let summaryPayload = try? loadJSONDict(at: summaryURL)
+                let chapterPayload = try? loadJSONDict(at: directory.appendingPathComponent("memo-chapter-payload.json"))
+                let informationPayload = try? loadJSONDict(at: directory.appendingPathComponent("memo-information-payload.json"))
+                let transcriptionPayload = try? loadJSONDict(at: directory.appendingPathComponent("memo-transcription-payload.json"))
+
+                let rebuilt = MeetingMemoClient.buildArtifact(
+                    transcriptionPayload: transcriptionPayload,
+                    chapterPayload: chapterPayload,
+                    informationPayload: informationPayload,
+                    summarizationPayload: summaryPayload
+                )
+
+                let rebuiltSummary = rebuilt.summaryBundle
+                if rebuiltSummary == record.summaryBundle {
+                    stats.skippedUnchanged += 1
+                    continue
+                }
+
+                var updated = record
+                updated.summaryBundle = rebuiltSummary
+                try await persist(record: updated, keepActiveMeeting: false, refreshRecentMeetings: false)
+                stats.refreshed += 1
+            } catch {
+                logger.error("reparse failed for \(record.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                stats.failed += 1
+            }
+        }
+
+        await reloadMeetings()
+        logger.info("reparse done attempted=\(stats.attempted) refreshed=\(stats.refreshed) noPayload=\(stats.skippedNoPayload) unchanged=\(stats.skippedUnchanged) failed=\(stats.failed)")
+        return stats
+    }
+
+    private func loadJSONDict(at url: URL) throws -> [String: Any]? {
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        let data = try Data(contentsOf: url)
+        let object = try JSONSerialization.jsonObject(with: data)
+        if let dict = object as? [String: Any] { return dict }
+        if let array = object as? [Any] { return ["items": array] }
+        return nil
+    }
+
     func clearAudioInputModeError() {
         audioInputModeError = nil
     }
