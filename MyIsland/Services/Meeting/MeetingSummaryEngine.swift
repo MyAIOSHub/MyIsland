@@ -255,7 +255,8 @@ actor MeetingSummaryEngine {
 
         let userPrompt = """
         你要在不伪造事实的前提下，对现有会议总结做一次“重点加权 refinement”。
-        只返回合法 JSON，不要输出 Markdown 代码块，结构如下：
+        只返回合法 JSON，**字段值内部允许使用 Markdown**（用于加粗），不要在 JSON 外层套 ```code fence```。
+        结构：
         {
           "fullSummary": "string",
           "chapterSummaries": [{"title":"string","summary":"string"}],
@@ -269,6 +270,15 @@ actor MeetingSummaryEngine {
         - 如果重点和现有总结冲突，以会议原文与重点原文为准。
         - fullSummary 保持简洁，但必须优先覆盖重点关注与笔记提到的内容。
         - chapterSummaries 最多 4 项，actionItems 最多 8 项，qaPairs 最多 5 项。
+
+        【加粗规则 — 必须遵守】
+        - 在 fullSummary 与 chapterSummaries.summary 中：凡是与“重点关注”或“会议笔记”
+          所述内容**语义相关**的句子或短语，**必须用 Markdown 双星号包裹加粗**
+          （例如：发布日期改到下周三 → **发布日期改到下周三**）。
+        - 加粗范围限制为关键名词短语 / 决定 / 数字 / 截止日期，不要把整段长句全部加粗。
+        - 没被用户标重点的内容不要加粗。
+        - actionItems / qaPairs / processHighlights 的字符串值同样允许加粗，
+          但同样仅限于命中用户标注的部分。
 
         当前总结：
         全文总结：\(summaryBundle.fullSummary)

@@ -18,6 +18,7 @@ struct MeetingDetailView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                 header
                 summarySection
+                quoteHighlightsSection
                 decisionsSection
                 focusSection
                 noteSection
@@ -128,6 +129,111 @@ struct MeetingDetailView: View {
             RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
                 .fill(DesignTokens.Surface.base)
         )
+    }
+
+    /// "金句" — a quote-styled card stack that surfaces every focus
+    /// annotation (重点) and note annotation (笔记) the user marked
+    /// during recording. Each tile shows the quoted transcript text in
+    /// large quote marks plus the speaker / timecode attribution, and
+    /// the user's own note text underneath when present.
+    ///
+    /// Hidden entirely when there are no annotations.
+    @ViewBuilder
+    private var quoteHighlightsSection: some View {
+        let highlights = quoteHighlights()
+        if !highlights.isEmpty {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                Text("金句")
+                    .font(DesignTokens.Font.heading())
+                    .foregroundColor(DesignTokens.Text.primary)
+
+                ForEach(highlights) { highlight in
+                    quoteCard(highlight)
+                }
+            }
+            .padding(DesignTokens.Spacing.md)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
+                    .fill(DesignTokens.Surface.base)
+            )
+        }
+    }
+
+    private struct QuoteHighlight: Identifiable {
+        let id: String
+        let kind: MeetingAnnotationKind
+        let timecodeMs: Int
+        let timecode: String
+        let speakerLabel: String?
+        /// The verbatim transcript line being quoted (when available).
+        let quotedText: String?
+        /// The user's own note / highlight text, if any.
+        let userText: String?
+    }
+
+    private func quoteHighlights() -> [QuoteHighlight] {
+        let annotations = (resolvedRecord.focusAnnotations + resolvedRecord.noteAnnotations)
+            .sorted { $0.timecodeMs < $1.timecodeMs }
+        let transcript = resolvedRecord.transcript
+
+        return annotations.map { annotation in
+            let context = annotation.quoteContext(in: transcript)
+            let timecode = context?.timecode ?? MeetingLiveTimeline.timecode(milliseconds: annotation.timecodeMs)
+            let userText = annotation.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            return QuoteHighlight(
+                id: annotation.id,
+                kind: annotation.kind,
+                timecodeMs: annotation.timecodeMs,
+                timecode: timecode,
+                speakerLabel: context?.speakerLabel,
+                quotedText: context?.text,
+                userText: userText.isEmpty ? nil : userText
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func quoteCard(_ highlight: QuoteHighlight) -> some View {
+        let accent: Color = highlight.kind == .focus ? TerminalColors.amber : TerminalColors.green
+        let kindLabel: String = highlight.kind == .focus ? "重点" : "笔记"
+
+        HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
+            // Decorative left rule colour-coded by annotation kind so a
+            // glance distinguishes 重点 (amber) from 笔记 (green).
+            RoundedRectangle(cornerRadius: 1.5)
+                .fill(accent)
+                .frame(width: 3)
+
+            VStack(alignment: .leading, spacing: 6) {
+                if let quotedText = highlight.quotedText, !quotedText.isEmpty {
+                    Text("「\(quotedText)」")
+                        .font(DesignTokens.Font.body())
+                        .italic()
+                        .foregroundColor(DesignTokens.Text.primary)
+                } else if let userText = highlight.userText {
+                    // No transcript context (user wrote a free-form note
+                    // not attached to a segment) — surface the note
+                    // text itself as the quote.
+                    Text("「\(userText)」")
+                        .font(DesignTokens.Font.body())
+                        .italic()
+                        .foregroundColor(DesignTokens.Text.primary)
+                }
+
+                if let userText = highlight.userText, highlight.quotedText != nil, !userText.isEmpty {
+                    Text(userText)
+                        .font(DesignTokens.Font.body())
+                        .foregroundColor(DesignTokens.Text.secondary)
+                }
+
+                let metaParts = [highlight.speakerLabel, highlight.timecode].compactMap { $0 }
+                Text("\(kindLabel) · \(metaParts.joined(separator: " · "))")
+                    .font(DesignTokens.Font.caption())
+                    .foregroundColor(accent.opacity(0.85))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 4)
     }
 
     /// Decisions extracted by the LLM augmentation pass. Hidden entirely
